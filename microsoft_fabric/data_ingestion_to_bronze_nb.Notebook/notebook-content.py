@@ -157,14 +157,14 @@ for item in items:
     guid = item.find('omny:clipId', namespaces).text
 
     if guid in fabric_json_guids:
-        print(f'Skipped {iter} / {total_len}')
+        print(f'Skipped {iter} / {total_len}', end='\r', flush=True)
 
     else:
         try:
             episode_data = process_podcast_item(item)
             transcript_file_path = f'/lakehouse/default/Files/raw_episode_json/{guid}.json'
             save_json_file(episode_data, transcript_file_path)
-            print(f'Saved new {iter} / {total_len}')
+            print(f'Saved new {iter} / {total_len}', end='\r', flush=True)
 
         except Exception as e:
             print(f'Passing {iter} / {total_len} error: {e}')
@@ -241,7 +241,7 @@ for file in fabric_raw_json_files:
     guid = file.name.split('.json')[0]
 
     if guid in fabric_processed_json_guids:
-         print(f'Skipped {iter} / {total_len}')
+         print(f'Skipped {iter} / {total_len}', end='\r', flush=True)
 
     else:
         start_time = time.time()
@@ -336,6 +336,13 @@ def batch_documents(documents, max_payload_bytes=16 * 1024 * 1024, max_docs_per_
     if batch:
         yield batch
 
+def check_document_in_azure_ai_search(document_id:str) -> str:
+    try:
+        doc = search_client.get_document(key=document_id)
+        return True
+    except Exception as e:
+        return False
+
 # METADATA ********************
 
 # META {
@@ -344,6 +351,35 @@ def batch_documents(documents, max_payload_bytes=16 * 1024 * 1024, max_docs_per_
 # META }
 
 # CELL ********************
+
+# Incrementally load documents to Azure AI Search
+fabric_json_processed_files = notebookutils.fs.ls('/lakehouse/default/Files/processed_episode_json')
+
+documents = []
+total_len = len(fabric_json_processed_files)
+iter = 1
+for file in fabric_json_processed_files:
+    file_name = file.name.split('.')[0]
+
+    if(check_document_in_azure_ai_search(file_name)):
+        pass
+
+    # Upload Document not found in Azure AI Search
+    else:
+
+        try:
+            with open(file.path, 'r') as f:
+                data = json.load(f)
+            
+            documents.append(data)
+
+            print(f'Parsed document: {iter}/{total_len}', end='\r', flush=True)
+
+        except:
+            print('Document could not be parsed')
+
+    iter += 1
+
 
 for i, batch in enumerate(batch_documents(documents)):
     result = search_client.upload_documents(documents=batch)
