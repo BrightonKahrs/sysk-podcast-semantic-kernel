@@ -5,11 +5,7 @@ Only two lines changed compared with your original file:
     from utils.state_store import get_state_store  
     STATE_STORE = get_state_store()  
 Everything else is untouched.  
-"""  
-  
-import os  
-import sys  
-from pathlib import Path  
+"""    
 from typing import Dict, List  
   
 import uvicorn  
@@ -35,7 +31,7 @@ load_dotenv()  # read .env if present
 # ------------------------------------------------------------------  
 # Get the correct state-store implementation  
 # ------------------------------------------------------------------  
-from utils import get_state_store  
+from backend.utils import get_state_store  
   
 STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore  
   
