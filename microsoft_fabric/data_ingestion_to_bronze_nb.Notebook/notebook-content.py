@@ -186,16 +186,16 @@ for item in items:
 api_key = notebookutils.credentials.getSecret('syskakv','aoai')
 
 aoai_client = AzureOpenAI(
-    azure_endpoint='https://ai-foundry-hub-sysk.openai.azure.com/',
+    azure_endpoint='https://azureopenai-ai-sysk.openai.azure.com/',
     api_key=api_key,
-    api_version="2024-02-01"
+    api_version="2024-12-01-preview"
 )
 
 # Generate embeddings function
 def generate_embeddings(text:str) -> list:
 
     response = aoai_client.embeddings.create(
-        model='text-embedding-ada-002',
+        model='text-embedding-3-small',
         input=text
     )
 
@@ -297,7 +297,7 @@ for file in fabric_raw_json_files:
 api_key = notebookutils.credentials.getSecret('syskakv','ai-search')
 
 endpoint = 'https://ai-search-syskai.search.windows.net'
-index_name = 'sysk_episode_transcripts'
+index_name = 'sysk-podcast-episodes'
 
 search_client = SearchClient(endpoint=endpoint,
                       index_name=index_name,
