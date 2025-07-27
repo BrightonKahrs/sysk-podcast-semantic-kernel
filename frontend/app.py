@@ -1,68 +1,56 @@
-import streamlit as st
+from flask import Flask, render_template, request, session, jsonify, redirect, url_for
 import requests, uuid, os
-from dotenv import load_dotenv  
-  
+from dotenv import load_dotenv
+
 load_dotenv()
 
-st.markdown(
-    """
-    <style>
-        body {
-            background-color: red;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
-BASE_BACKEND_URL = os.getenv("BACKEND_URL")
-CHAT_URL = f"{BASE_BACKEND_URL}/chat"
-HISTORY_URL = f"{BASE_BACKEND_URL}/history"
-SESSION_RESET_URL = f"{BASE_BACKEND_URL}/reset_session"
+BASE_BACKEND_URL = os.getenv('BACKEND_URL')
+CHAT_URL = f'{BASE_BACKEND_URL}/chat'
+SESSION_RESET_URL = f'{BASE_BACKEND_URL}/reset_session'
 
-# ───────────────── Sidebar ──────────────────
-with st.sidebar:
-    st.title("Chat History")
-    if st.button("🗘  New chat", key="new_chat"):
-        r = requests.post(
-            SESSION_RESET_URL,
-            json={"session_id": st.session_state["session_id"]},
-        )
+print(f"BACKEND_URL: {BASE_BACKEND_URL}")
 
-# ───────────────── Page title ────────────────
-st.markdown(
-    "<h1 style='display:flex; align-items:center;'>Stuff You Should Know Podcast AI</h1>",
-    unsafe_allow_html=True,
-)
+@app.route('/', methods=['GET'])
+def index():
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    if 'conversation' not in session:
+        session['conversation'] = []
+    return render_template('index.html', conversation=session['conversation'])
 
-# ───────────── Load or initialize session ────────────────
-if "session_id" not in st.session_state:
-    st.session_state["session_id"] = str(uuid.uuid4())
-conversation_history = []
-# Fetch existing history from backend
-response = requests.get(f"{HISTORY_URL}/{st.session_state['session_id']}")
-if response.status_code == 200:
-    history_data = response.json()
-    conversation_history = history_data.get("history", [])
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    prompt = data.get('prompt')
 
-# ───────────────── Chat history ─────────────
-for msg in conversation_history:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    if not prompt:
+        return jsonify({'error': 'No prompt provided'}), 400
 
-# ───────────────── Chat interaction ─────────────
-prompt = st.chat_input("Type a message...")
-if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    session['conversation'].append({'role': 'user', 'content': prompt})
 
-    with st.spinner("Assistant is thinking..."):
-        r = requests.post(
-            CHAT_URL,
-            json={"session_id": st.session_state["session_id"], "prompt": prompt},
-        )
-        r.raise_for_status()
-        answer = r.json()["response"]
+    chat_res = requests.post(
+        CHAT_URL,
+        json={'session_id': session['session_id'], 'prompt': prompt}
+    )
 
-    with st.chat_message("assistant"):
-        st.markdown(answer)
+    if chat_res.status_code != 200:
+        return jsonify({'error': 'Chat backend error'}), 500
+
+    response_text = chat_res.json().get('response')
+    session['conversation'].append({'role': 'assistant', 'content': response_text})
+    session.modified = True
+
+    return jsonify({'response': response_text})
+
+
+@app.route('/reset', methods=['POST'])
+def reset():
+    requests.post(SESSION_RESET_URL, json={'session_id': session['session_id']})
+    session['conversation'] = []
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
