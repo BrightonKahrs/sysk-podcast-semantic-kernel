@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SYSK Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <div class="sidebar">
+        <form method="post" action="/reset">
+            <button type="submit">🗘 New Chat</button>
+        </form>
+    </div>
+
+    <div class="main">
+        <h1>STUFF YOU SHOULD KNOW</h1>
+        <div class="divider"></div>
+        <h2>PODCAST AI</h2>
+        <div class="spacer"></div>
+
+        <div class="chat-history" id="chat-history">
+            {% for msg in conversation %}
+                <div class="message {{ msg.role }}">
+                    <strong>{{ msg.role.title() }}:</strong> {{ msg.content }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <form id="chat-form">
+            <input type="text" id="prompt-input" autocomplete="off" />
+            <button type="submit">Send</button>
+        </form>
+
+        <script>
+        document.getElementById('chat-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const input = document.getElementById('prompt-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            // Add user message to DOM
+            const chatHistory = document.getElementById('chat-history');
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = `<strong>User:</strong> ${prompt}`;
+            chatHistory.appendChild(userMsg);
+            input.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!res.ok) throw new Error('Request failed');
+
+                const data = await res.json();
+                if (!data.response) throw new Error('No response in JSON');
+
+                const assistantMsg = document.createElement('div');
+                assistantMsg.className = 'message assistant';
+
+                const parsedHTML = marked.parse(data.response);
+                assistantMsg.innerHTML = `
+                        <strong>Assistant:</strong>
+                        <div class="markdown">${parsedHTML}</div>
+                `;
+
+                assistantMsg.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+                chatHistory.appendChild(assistantMsg);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } catch (err) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message error';
+                errorMsg.innerHTML = `<strong>Error:</strong> ${err.message}`;
+                chatHistory.appendChild(errorMsg);
+            }
+        });
+        </script>
+
+    </div>
+</body>
+</html>

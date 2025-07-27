@@ -32,7 +32,7 @@ do {
 
 if ($backendReady) {
     Write-Host "✅ Backend is up. Starting frontend..."
-    Start-Process powershell -ArgumentList "streamlit run frontend/app.py"
+    Start-Process powershell -ArgumentList "python frontend/app.py"
 } else {
     Write-Host "❌ Backend did not start within $($maxRetries * $waitSeconds) seconds."
 }
