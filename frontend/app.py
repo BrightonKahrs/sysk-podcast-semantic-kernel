@@ -2,17 +2,27 @@ import streamlit as st
 import requests, uuid, os
 from dotenv import load_dotenv  
   
-load_dotenv() 
+load_dotenv()
+
+st.markdown(
+    """
+    <style>
+        body {
+            background-color: red;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 BASE_BACKEND_URL = os.getenv("BACKEND_URL")
-#BASE_BACKEND_URL = os.getenv("BACKEND_URL", "https://sysk-ai-backend.yellowmeadow-92ed4f99.eastus2.azurecontainerapps.io")
 CHAT_URL = f"{BASE_BACKEND_URL}/chat"
 HISTORY_URL = f"{BASE_BACKEND_URL}/history"
 SESSION_RESET_URL = f"{BASE_BACKEND_URL}/reset_session"
 
 # ───────────────── Sidebar ──────────────────
 with st.sidebar:
-    st.title("⚙️  Controls")
+    st.title("Chat History")
     if st.button("🗘  New chat", key="new_chat"):
         r = requests.post(
             SESSION_RESET_URL,
@@ -21,7 +31,7 @@ with st.sidebar:
 
 # ───────────────── Page title ────────────────
 st.markdown(
-    "<h1 style='display:flex; align-items:center;'>AI Chat Assistant 🤖</h1>",
+    "<h1 style='display:flex; align-items:center;'>Stuff You Should Know Podcast AI</h1>",
     unsafe_allow_html=True,
 )
 
