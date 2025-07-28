@@ -16,7 +16,7 @@ from .base_agent import BaseAgent
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,10 @@ class RagAgent(BaseAgent):
         await self._setup_agent()
 
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
+        
+        logging.debug(f"Response type: {type(response)}")
+        logging.debug(f"Response: {response}")
+        
         response_content = str(response.content)
 
         self._thread = response.thread
