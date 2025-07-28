@@ -22,6 +22,7 @@ $retry = 0
 
 Write-Host "Waiting for backend to start on port 7000..."
 
+# To run locally make sure to use Flask instead of gunicorn, you will need to uncomment the last section in frontend/app.py
 do {
     Start-Sleep -Seconds $waitSeconds
     $backendReady = Get-NetTCPConnection -LocalPort 7000 -ErrorAction SilentlyContinue |
