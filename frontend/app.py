@@ -23,6 +23,11 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    if 'conversation' not in session:
+        session['conversation'] = []
+
     data = request.get_json()
     prompt = data.get('prompt')
 
@@ -46,11 +51,12 @@ def chat():
     return jsonify({'response': response_text})
 
 
+
 @app.route('/reset', methods=['POST'])
 def reset():
     requests.post(SESSION_RESET_URL, json={'session_id': session['session_id']})
     session['conversation'] = []
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=5000)
