@@ -1,43 +1,49 @@
-"""  
-FastAPI entry-point.  
-  
-Only two lines changed compared with your original file:  
-    from utils.state_store import get_state_store  
-    STATE_STORE = get_state_store()  
-Everything else is untouched.  
-"""    
-from typing import Dict, List  
+from typing import Dict, List
+from dotenv import load_dotenv
+import os
   
 import uvicorn  
 from fastapi import FastAPI  
-from pydantic import BaseModel  
-from dotenv import load_dotenv
+from pydantic import BaseModel
+from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
+from azure.ai.projects import AIProjectClient
+from azure.identity import ClientSecretCredential
+from azure.monitor.opentelemetry import configure_azure_monitor
 
+from backend.utils import get_state_store
 from backend.agents import RagAgent  # Import the RagAgent class
   
-# ------------------------------------------------------------------  
-# Environment  
-# ------------------------------------------------------------------  
+#Setup from environment
 load_dotenv()  # read .env if present  
-  
-# ------------------------------------------------------------------  
-# Bring project root onto the path & load your agent dynamically  
-# ------------------------------------------------------------------  
-# sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  
-# agent_module_path = os.getenv("AGENT_MODULE")  
-# agent_module = __import__(agent_module_path, fromlist=["Agent"])  
-# Agent = getattr(agent_module, "Agent")  
-  
-# ------------------------------------------------------------------  
-# Get the correct state-store implementation  
-# ------------------------------------------------------------------  
-from backend.utils import get_state_store  
-  
+
+
+# Set up telemetry - requires an AZ login via Service Principal
+OpenAIInstrumentor().instrument()
+
+client_id = os.getenv('AZURE_CLIENT_ID')
+client_secret = os.getenv('AZURE_CLIENT_SECRET')
+tenant_id = os.getenv('AZURE_TENANT_ID')
+endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
+
+credential = ClientSecretCredential(
+    tenant_id=tenant_id,
+    client_id=client_id,
+    client_secret=client_secret,
+)
+
+project_client = AIProjectClient(
+    credential=credential,
+    endpoint=endpoint,
+)
+
+connection_string = project_client.telemetry.get_connection_string()
+configure_azure_monitor(connection_string=connection_string)
+
+
+# Set conversation state history
 STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore  
   
-# ------------------------------------------------------------------  
-# FastAPI app  
-# ------------------------------------------------------------------  
+# Setup FastAPI App
 app = FastAPI()  
   
   
