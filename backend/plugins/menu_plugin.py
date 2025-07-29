@@ -22,7 +22,7 @@ class MenuPlugin:
     @kernel_function(description="Provides a list of specials from the menu.")
     async def get_specials(self) -> Annotated[str, "Returns the specials from the menu."]:
 
-        await connection_manager.broadcast("MenuTool")
+        await connection_manager.broadcast_tool_call('Menu Tool')
 
         time.sleep(10)
 

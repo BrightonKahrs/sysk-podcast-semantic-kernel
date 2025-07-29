@@ -13,6 +13,7 @@ from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
 from backend.plugins.menu_plugin import MenuPlugin
 from backend.agents.base_agent import BaseAgent
+from backend.utils.connection_manager import connection_manager
 
 
 # Configure logging
@@ -68,6 +69,8 @@ class RagAgent(BaseAgent):
         
         logging.debug(f"Response type: {type(response)}")
         logging.debug(f"Response: {response}")
+
+        await connection_manager.broadcast_message_finished()
         
         response_content = str(response.content)
 
