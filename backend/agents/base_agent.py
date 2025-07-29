@@ -1,7 +1,15 @@
 import os  
 import logging  
 from typing import Any, Dict, List, Optional  
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
+
+from functools import wraps
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
   
 load_dotenv()  # Load environment variables from .env file if needed  
   
@@ -25,15 +33,31 @@ class BaseAgent:
         self.state: Optional[Any] = self.state_store.get(session_id, None) 
         logging.debug(f"Chat history for session {session_id}: {self.chat_history}")  
   
+
     def _setstate(self, state: Any) -> None:  
         self.state_store[self.session_id] = state  
   
+
     def append_to_chat_history(self, messages: List[Dict[str, str]]) -> None:  
         self.chat_history.extend(messages)  
         self.state_store[f"{self.session_id}_chat_history"] = self.chat_history  
   
+
     async def chat_async(self, prompt: str) -> str:  
         """  
         Override in child class!  
         """  
         raise NotImplementedError("chat_async should be implemented in subclass.")  
+    
+
+    def instrument_tool_call(self, func):
+        """
+        Wrapper method to send tool usage events to the frontend
+        """
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            tool_name = func.__name__
+            logging.debug(f'🔧 Tool called: {tool_name} with args: {kwargs}')
+            return await func(*args, **kwargs)
+        
+        return wrapper

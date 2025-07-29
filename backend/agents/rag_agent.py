@@ -10,7 +10,7 @@ from semantic_kernel.kernel_types import OptionalOneOrList
 from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 
-from backend.plugins import azure_ai_search_plugin
+from backend.plugins import azure_ai_search_plugin, MenuPlugin
 from .base_agent import BaseAgent
 
 
@@ -32,6 +32,8 @@ class RagAgent(BaseAgent):
         """Initialize the assistant and tools only once."""
         if self._initialized:
             return
+        
+        #wrapped_ai_search_plugin = [self.instrument_tool_call(f) for f in azure_ai_search_plugin.functions]
 
         # Set up the chat completion agent with the Azure OpenAI service and Azure AI Search plugin.
         self._agent = ChatCompletionAgent(
@@ -40,7 +42,7 @@ class RagAgent(BaseAgent):
             service = AzureChatCompletion(),
             instructions="You are a helpful assistant that can answer questions about the Stuff You Should Know podcast episodes. Use the Azure AI Search to find relevant information.",
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[azure_ai_search_plugin],
+            plugins=[azure_ai_search_plugin, MenuPlugin()],
         )
 
 

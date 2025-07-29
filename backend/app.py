@@ -1,16 +1,16 @@
-from typing import Dict, List
+from typing import Dict, List, Set
 from dotenv import load_dotenv
 import os
   
 import uvicorn  
-from fastapi import FastAPI  
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 from azure.ai.projects import AIProjectClient
 from azure.identity import ClientSecretCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 
-from backend.utils import get_state_store
+from backend.utils import get_state_store, connection_manager
 from backend.agents import RagAgent  # Import the RagAgent class
   
 #Setup from environment
@@ -18,26 +18,29 @@ load_dotenv()  # read .env if present
 
 
 # Set up telemetry - requires an AZ login via Service Principal
-OpenAIInstrumentor().instrument()
+# OpenAIInstrumentor().instrument()
 
-client_id = os.getenv('AZURE_CLIENT_ID')
-client_secret = os.getenv('AZURE_CLIENT_SECRET')
-tenant_id = os.getenv('AZURE_TENANT_ID')
-endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
+# client_id = os.getenv('AZURE_CLIENT_ID')
+# client_secret = os.getenv('AZURE_CLIENT_SECRET')
+# tenant_id = os.getenv('AZURE_TENANT_ID')
+# endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
 
-credential = ClientSecretCredential(
-    tenant_id=tenant_id,
-    client_id=client_id,
-    client_secret=client_secret,
-)
+# credential = ClientSecretCredential(
+#     tenant_id=tenant_id,
+#     client_id=client_id,
+#     client_secret=client_secret,
+# )
 
-project_client = AIProjectClient(
-    credential=credential,
-    endpoint=endpoint,
-)
+# project_client = AIProjectClient(
+#     credential=credential,
+#     endpoint=endpoint,
+# )
 
-connection_string = project_client.telemetry.get_connection_string()
-configure_azure_monitor(connection_string=connection_string)
+# connection_string = project_client.telemetry.get_connection_string()
+# configure_azure_monitor(connection_string=connection_string)
+
+# Store active WebSocket connections
+active_connections: Set[WebSocket] = set()
 
 
 # Set conversation state history
@@ -63,6 +66,17 @@ class ConversationHistoryResponse(BaseModel):
   
 class SessionResetRequest(BaseModel):  
     session_id: str  
+
+
+@app.websocket('/ws')
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection_manager.add(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        connection_manager.remove(websocket)
   
   
 @app.post("/chat", response_model=ChatResponse)  
