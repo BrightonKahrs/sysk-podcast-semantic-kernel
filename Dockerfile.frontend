@@ -12,5 +12,5 @@ ENV PYTHONPATH=/app
 ENV PORT=80
 EXPOSE 80
 
-CMD ["gunicorn", "-b", "0.0.0.0:80", "frontend.app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:80", "frontend.main:create_app()"]
 
