@@ -1,6 +1,6 @@
 from semantic_kernel.functions import KernelParameterMetadata, KernelPlugin
 
-from backend.data_collections import podcast_collection
+from backend.data_collections.podcast_collection import podcast_collection
                                      
 azure_ai_search_plugin = KernelPlugin(
     name="azure_ai_search",

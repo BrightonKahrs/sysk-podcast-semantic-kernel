@@ -6,7 +6,7 @@ from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.functions import kernel_function
 
-from backend.utils import connection_manager
+from backend.utils.connection_manager import connection_manager
 
 """
 The following sample demonstrates how to create a chat completion agent that

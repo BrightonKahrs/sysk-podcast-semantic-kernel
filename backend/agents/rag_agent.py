@@ -10,8 +10,9 @@ from semantic_kernel.kernel_types import OptionalOneOrList
 from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 
-from backend.plugins import azure_ai_search_plugin, MenuPlugin
-from .base_agent import BaseAgent
+from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
+from backend.plugins.menu_plugin import MenuPlugin
+from backend.agents.base_agent import BaseAgent
 
 
 # Configure logging

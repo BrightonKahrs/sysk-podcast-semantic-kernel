@@ -10,8 +10,9 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import ClientSecretCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 
-from backend.utils import get_state_store, connection_manager
-from backend.agents import RagAgent  # Import the RagAgent class
+from backend.utils.connection_manager import connection_manager
+from backend.utils.state_store import get_state_store
+from backend.agents.rag_agent import RagAgent  # Import the RagAgent class
   
 #Setup from environment
 load_dotenv()  # read .env if present  
