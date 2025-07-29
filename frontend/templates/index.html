@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>SYSK Chat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -29,103 +29,16 @@
             {% endfor %}
         </div>
 
+        <div id="loading-spinner" style="display:none;"></div>
+
         <form id="chat-form">
             <input type="text" id="prompt-input" autocomplete="off" />
             <button type="submit">Send</button>
         </form>
 
-        <script>
-        document.getElementById('chat-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const input = document.getElementById('prompt-input');
-            const prompt = input.value.trim();
-            if (!prompt) return;
-
-            // Add user message to DOM
-            const chatHistory = document.getElementById('chat-history');
-            const userMsg = document.createElement('div');
-            userMsg.className = 'message user';
-            userMsg.innerHTML = `<strong>User:</strong> ${prompt}`;
-            chatHistory.appendChild(userMsg);
-            input.value = '';
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            try {
-                const res = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-
-                if (!res.ok) throw new Error('Request failed');
-
-                const data = await res.json();
-                if (!data.response) throw new Error('No response in JSON');
-
-                const assistantMsg = document.createElement('div');
-                assistantMsg.className = 'message assistant';
-
-                const parsedHTML = marked.parse(data.response);
-                assistantMsg.innerHTML = `
-                        <strong>Assistant:</strong>
-                        <div class="markdown">${parsedHTML}</div>
-                `;
-
-                assistantMsg.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-
-                chatHistory.appendChild(assistantMsg);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
-            } catch (err) {
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message error';
-                errorMsg.innerHTML = `<strong>Error:</strong> ${err.message}`;
-                chatHistory.appendChild(errorMsg);
-            }
-        });
-        </script>
-
-        <script>
-            // Replace with your backend's URL and port if needed
-            const socket = new WebSocket('ws://localhost:7000/ws');
-
-            socket.onopen = () => {
-                console.log('WebSocket connection established.');
-            };
-
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log('Received WebSocket message:', data);
-
-                // Example: show a spinner if a tool call starts
-                if (data.event === 'tool_call') {
-                const { tool_name, args } = data;
-                console.log(`Tool "${tool_name}"`);
-
-                // You could trigger a loading spinner here
-                showSpinner(tool_name);
-                }
-            };
-
-            socket.onclose = () => {
-                console.log('WebSocket connection closed.');
-            };
-
-            socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
-
-            function showSpinner(toolName) {
-                const spinner = document.getElementById('loading-spinner');
-                spinner.style.display = 'block';
-                spinner.innerText = `Running tool: ${toolName}`;
-            }
-        </script>
-
-        <div id="loading-spinner" style="display:none;"></div>
-
     </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/websocket_spinner.js') }}"></script>
 </body>
 </html>
