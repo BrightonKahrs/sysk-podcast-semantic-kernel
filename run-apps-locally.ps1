@@ -1,39 +1,45 @@
-# ─── Free Port 7000 If Needed ─────────────────────
-$process_id = Get-NetTCPConnection -LocalPort 7000 -ErrorAction SilentlyContinue |
-    Where-Object { $_.State -eq 'Listen' } |
-    Select-Object -ExpandProperty OwningProcess
+$ErrorActionPreference = "Stop"
 
-if ($process_id) {
-    Write-Host "Port 7000 is in use by PID $process_id. Stopping it..."
-    Stop-Process -Id $process_id -Force
-    Start-Sleep -Seconds 2
-} else {
-    Write-Host "Port 7000 is free. Continuing..."
+$networkName = "sysk-network"
+$backendName = "sysk-backend"
+$frontendName = "sysk-frontend"
+
+Write-Host "Building backend..."
+docker build -t $backendName -f Dockerfile.backend .
+
+Write-Host "Building frontend..."
+docker build -t $frontendName -f Dockerfile.frontend .
+
+# Check if network exists
+$networkExists = docker network ls --format '{{.Name}}' | Select-String -Pattern $networkName
+
+if (-not $networkExists) {
+    Write-Host "Creating Docker network $networkName..."
+    docker network create $networkName
 }
 
-# ─── Start Backend ────────────────────────────────
+# Remove old containers (if exist)
+Write-Host "Cleaning up old containers..."
+docker rm -f "$backendName"
+docker rm -f "$frontendName"
+
+# Run backend container
 Write-Host "Starting backend..."
-Start-Process powershell -ArgumentList "python -m backend.app"
+docker run -d `
+  --name $backendName `
+  --env-file .env `
+  --network $networkName `
+  -p 7000:7000 `
+  $backendName
 
-# ─── Wait Until Port 7000 is Listening ────────────
-$maxRetries = 30
-$waitSeconds = 1
-$retry = 0
+# Run frontend container
+Write-Host "Starting frontend..."
+docker run -d `
+  --name $frontendName `
+  --env-file .env `
+  --network $networkName `
+  -p 80:80 `
+  $frontendName
 
-Write-Host "Waiting for backend to start on port 7000..."
+Write-Host "All containers are up and running!"
 
-# To run locally make sure to use Flask instead of gunicorn, you will need to uncomment the last section in frontend/app.py
-do {
-    Start-Sleep -Seconds $waitSeconds
-    $backendReady = Get-NetTCPConnection -LocalPort 7000 -ErrorAction SilentlyContinue |
-        Where-Object { $_.State -eq 'Listen' }
-
-    $retry++
-} until ($backendReady -or $retry -ge $maxRetries)
-
-if ($backendReady) {
-    Write-Host "✅ Backend is up. Starting frontend..."
-    Start-Process powershell -ArgumentList "python frontend/app.py"
-} else {
-    Write-Host "❌ Backend did not start within $($maxRetries * $waitSeconds) seconds."
-}

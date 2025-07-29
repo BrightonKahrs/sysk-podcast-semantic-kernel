@@ -1,19 +1,11 @@
-from flask import Flask, render_template, request, session, jsonify, redirect, url_for
-import requests, uuid, os
-from dotenv import load_dotenv
+# routes/chat.py
+from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, current_app
+import requests
+import uuid
 
-load_dotenv()
+chat_bp = Blueprint('chat', __name__)
 
-app = Flask(__name__)
-app.secret_key = os.urandom(24)
-
-BASE_BACKEND_URL = os.getenv('BACKEND_URL')
-CHAT_URL = f'{BASE_BACKEND_URL}/chat'
-SESSION_RESET_URL = f'{BASE_BACKEND_URL}/reset_session'
-
-print(f"BACKEND_URL: {BASE_BACKEND_URL}")
-
-@app.route('/', methods=['GET'])
+@chat_bp.route('/', methods=['GET'])
 def index():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
@@ -21,7 +13,7 @@ def index():
         session['conversation'] = []
     return render_template('index.html', conversation=session['conversation'])
 
-@app.route('/chat', methods=['POST'])
+@chat_bp.route('/chat', methods=['POST'])
 def chat():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
@@ -35,6 +27,9 @@ def chat():
         return jsonify({'error': 'No prompt provided'}), 400
 
     session['conversation'].append({'role': 'user', 'content': prompt})
+
+    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
+    CHAT_URL = f'{BASE_BACKEND_URL}/chat'
 
     chat_res = requests.post(
         CHAT_URL,
@@ -50,13 +45,11 @@ def chat():
 
     return jsonify({'response': response_text})
 
-
-
-@app.route('/reset', methods=['POST'])
+@chat_bp.route('/reset', methods=['POST'])
 def reset():
+    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
+    SESSION_RESET_URL = f'{BASE_BACKEND_URL}/reset_session'
+
     requests.post(SESSION_RESET_URL, json={'session_id': session['session_id']})
     session['conversation'] = []
-    return redirect(url_for('index'))
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5000)
+    return redirect(url_for('chat.index'))
