@@ -59,7 +59,7 @@ jobs:
         run: |
           REVISION_SUFFIX=frontend-$(date +%s)
           az containerapp update \
-            --name sysk-ai-frontend \
+            --name sysk-ai-frontend-app \
             --resource-group ai-sysk-demo \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest \
             --revision-suffix $REVISION_SUFFIX
