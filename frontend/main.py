@@ -19,6 +19,7 @@ def create_app():
 
     # Load config from environment or default
     app.config['BACKEND_URL'] = os.getenv('BACKEND_URL')
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     # Register blueprints
 
