@@ -23,21 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def to_dict(obj):
-    if hasattr(obj, 'to_dict'):
-        return obj.to_dict()
-    elif hasattr(obj, '__dict__'):
-        result = {}
-        for key, value in obj.__dict__.items():
-            result[key] = to_dict(value) if hasattr(value, '__dict__') else value
-        return result
-    elif isinstance(obj, list):
-        return [to_dict(item) for item in obj]
-    elif isinstance(obj, dict):
-        return {key: to_dict(value) for key, value in obj.items()}
-    else:
-        return obj
-
 
 class RagAgent(BaseAgent):
     def __init__(self, state_store: Dict[str, Any], session_id: str) -> None:

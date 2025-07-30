@@ -2,8 +2,11 @@ import os
 import logging  
 from typing import Any, Dict, List, Optional  
 from dotenv import load_dotenv
+import json
 
 from functools import wraps
+
+from backend.utils.json_encoder import CustomEncoder
 
 # Configure logging
 logging.basicConfig(
@@ -12,15 +15,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
   
 load_dotenv()  # Load environment variables from .env file if needed 
-
-import json
-class CustomEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'to_dict'):
-            return obj.to_dict()
-        elif hasattr(obj, '__dict__'):
-            return obj.__dict__
-        return super().default(obj)
 
   
 class BaseAgent:  
