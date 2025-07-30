@@ -1,0 +1,34 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login Required</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div>
+        <h1>Welcome to the Stuff You Should Know Podcast AI</h1>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="bg-blob-1"></div>
+    <div class="bg-blob-2"></div>
+
+    <div class="login-container">
+        <h2>Login Required</h2>
+        <a href="{{ url_for('auth.login') }}" class="ms-login-button" role="button">
+            <!-- Microsoft logo SVG -->
+            <svg class="ms-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <rect width="11" height="11" x="1" y="1" fill="#F35325"/>
+                <rect width="11" height="11" x="13" y="1" fill="#81BC06"/>
+                <rect width="11" height="11" x="1" y="13" fill="#05A6F0"/>
+                <rect width="11" height="11" x="13" y="13" fill="#FFBA08"/>
+            </svg>
+            Sign in with Microsoft
+        </a>
+    </div>
+</body>
+</html>

@@ -1,11 +1,24 @@
 # routes/chat.py
-from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, current_app
 import requests
 import uuid
 
+from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, current_app
+
+from frontend.routes.auth import allowed_group_ids
+
 chat_bp = Blueprint('chat', __name__)
 
-@chat_bp.route('/', methods=['GET'])
+@chat_bp.before_request
+def require_login():
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('auth.auth_start'))
+
+    user_groups = user.get('groups', [])
+    if not any(group_id in allowed_group_ids for group_id in user_groups):
+        return "Access denied: you are not authorized.", 403
+
+@chat_bp.route('/home', methods=['GET'])
 def index():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
