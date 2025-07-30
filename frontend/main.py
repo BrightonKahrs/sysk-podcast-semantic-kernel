@@ -4,6 +4,7 @@ import os
 
 from flask import Flask, redirect, url_for
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from frontend.routes.chat import chat_bp
 from frontend.routes.config import config_bp
@@ -21,6 +22,8 @@ def create_app():
     app.config['BACKEND_URL'] = os.getenv('BACKEND_URL')
     app.config['PREFERRED_URL_SCHEME'] = 'https'
 
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
     # Register blueprints
 
     app.register_blueprint(chat_bp)
@@ -30,6 +33,10 @@ def create_app():
     @app.route('/')
     def home():
         return redirect(url_for('auth.auth_start'))
+    
+    @app.route('/debug-redirect-uri')
+    def debug_uri():
+        return url_for('auth.authorized', _external=True)
 
     return app
 
