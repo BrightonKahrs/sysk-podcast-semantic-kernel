@@ -11,7 +11,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
   
-load_dotenv()  # Load environment variables from .env file if needed  
+load_dotenv()  # Load environment variables from .env file if needed 
+
+import json
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        return super().default(obj)
+
   
 class BaseAgent:  
     """  
@@ -34,7 +44,9 @@ class BaseAgent:
         logging.debug(f"Chat history for session {session_id}: {self.chat_history}")  
   
 
-    def _setstate(self, state: Any) -> None:  
+    def _setstate(self, state: Any) -> None:
+        state = json.dumps({'thread': state}, cls=CustomEncoder)
+        # state = json.loads(state)
         self.state_store[self.session_id] = state  
   
 

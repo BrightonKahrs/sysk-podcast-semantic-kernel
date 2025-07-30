@@ -9,18 +9,34 @@ from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.kernel_types import OptionalOneOrList
 from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
+from semantic_kernel.contents.chat_history import ChatHistory
+from semantic_kernel.contents.chat_message_content import ChatMessageContent
 
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
 from backend.plugins.menu_plugin import MenuPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+def to_dict(obj):
+    if hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '__dict__'):
+        result = {}
+        for key, value in obj.__dict__.items():
+            result[key] = to_dict(value) if hasattr(value, '__dict__') else value
+        return result
+    elif isinstance(obj, list):
+        return [to_dict(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: to_dict(value) for key, value in obj.items()}
+    else:
+        return obj
 
 
 class RagAgent(BaseAgent):
@@ -34,8 +50,6 @@ class RagAgent(BaseAgent):
         """Initialize the assistant and tools only once."""
         if self._initialized:
             return
-        
-        #wrapped_ai_search_plugin = [self.instrument_tool_call(f) for f in azure_ai_search_plugin.functions]
 
         # Set up the chat completion agent with the Azure OpenAI service and Azure AI Search plugin.
         self._agent = ChatCompletionAgent(
@@ -65,6 +79,8 @@ class RagAgent(BaseAgent):
         # Ensure agent/tools are ready and process the prompt.
         await self._setup_agent()
 
+        logging.debug(f"Thread is of type before response: {type(self._thread)}")
+
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
         
         logging.debug(f"Response type: {type(response)}")
@@ -75,6 +91,9 @@ class RagAgent(BaseAgent):
         response_content = str(response.content)
 
         self._thread = response.thread
+
+        logging.debug(f"Thread is of type after response: {type(self._thread)}")
+
         if self._thread:
             self._setstate({"thread": self._thread})
 

@@ -25,19 +25,9 @@ from typing import Any, Dict, Iterator, List, Optional
 # ---------------------------------------------------------------------------  
 # 3rd-party SDKs  
 # ---------------------------------------------------------------------------  
-try:  
-    from azure.cosmos import (  
-        CosmosClient,  
-        PartitionKey,  
-        exceptions as cosmos_exceptions,  
-    )  
-except ImportError:  
-    CosmosClient = None  # type: ignore  
   
-try:  
-    from azure.identity import ClientSecretCredential, DefaultAzureCredential  
-except ImportError:  
-    ClientSecretCredential = DefaultAzureCredential = None  # type: ignore  
+from azure.cosmos import CosmosClient, PartitionKey, exceptions as cosmos_exceptions
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
   
 # ---------------------------------------------------------------------------  
 # Cosmos-backed implementation  
@@ -55,12 +45,12 @@ class CosmosDBStateStore(abc.MutableMapping):
         if CosmosClient is None:  
             raise RuntimeError("azure-cosmos is not installed")  
   
-        endpoint = os.getenv("COSMOSDB_ENDPOINT") or os.getenv("COSMOS_DB_ENDPOINT")  
+        endpoint = os.getenv("COSMOSDB_ENDPOINT")
         if not endpoint:  
             raise RuntimeError("COSMOSDB_ENDPOINT must be defined")  
   
         # Data-level tenant (NOT the AAD tenant used for auth)  
-        self.tenant_id: str = os.getenv("DATA_TENANT_ID", "default")  
+        self.tenant_id: str = os.getenv("DATA_AZURE_TENANT_ID", "default")  
   
         self.client = CosmosClient(endpoint, credential=self._create_credential())  
   
@@ -86,15 +76,15 @@ class CosmosDBStateStore(abc.MutableMapping):
   
     # ------------------------- authentication helpers -------------------------  
     def _create_credential(self):  
-        key = os.getenv("COSMOSDB_KEY")  
+        key = os.getenv("COSMOSDB_KEY").strip('"')
         if key:  
             logging.info("CosmosDBStateStore: authenticating with KEY")  
             return key  
   
         c_id, c_secret, t_id = (  
-            os.getenv("AAD_CLIENT_ID"),  
-            os.getenv("AAD_CLIENT_SECRET"),  
-            os.getenv("AAD_TENANT_ID"),  
+            os.getenv("AZURE_CLIENT_ID"),  
+            os.getenv("AZURE_CLIENT_SECRET"),  
+            os.getenv("AZURE_TENANT_ID"),  
         )  
         if c_id and c_secret and t_id:  
             if ClientSecretCredential is None:  
@@ -178,17 +168,19 @@ def get_state_store() -> Dict[str, Any] | CosmosDBStateStore:
     """  
     Return a CosmosDBStateStore if Cosmos configuration exists, else a dict.  
     """  
-    have_endpoint = os.getenv("COSMOSDB_ENDPOINT") or os.getenv("COSMOS_DB_ENDPOINT")  
-    have_key = os.getenv("COSMOSDB_KEY")  
+    have_endpoint = os.getenv("COSMOSDB_ENDPOINT")
     have_aad = (  
-        os.getenv("AAD_CLIENT_ID")  
-        and os.getenv("AAD_CLIENT_SECRET")  
-        and os.getenv("AAD_TENANT_ID")  
+        os.getenv("AZURE_CLIENT_ID")  
+        and os.getenv("AZURE_CLIENT_SECRET")  
+        and os.getenv("AZURE_TENANT_ID")  
     )  
   
-    if have_endpoint and (have_key or have_aad):  
+    if have_endpoint and have_aad:  
         logging.info("Using Cosmos DB state store (tenant_id + id partition)")  
         return CosmosDBStateStore()  
   
     logging.info("Cosmos DB config absent → using in-memory dict")  
-    return {}  # fallback  
+    return {}  # fallback
+
+# # Singleton pattern
+# chat_history_state_store = get_state_store()
