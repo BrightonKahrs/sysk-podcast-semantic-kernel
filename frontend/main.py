@@ -1,9 +1,11 @@
+#frontend/main.py
 from dotenv import load_dotenv
 import os
 
 from flask import Flask
 
 from frontend.routes.chat import chat_bp
+from frontend.routes.config import config_bp
 
 load_dotenv()
 
@@ -12,11 +14,12 @@ def create_app():
     app.secret_key = os.urandom(24)
 
     # Load config from environment or default
-    app.config['BACKEND_URL'] = os.getenv('BACKEND_URL', 'http://localhost:7000')
+    app.config['BACKEND_URL'] = os.getenv('BACKEND_URL')
 
     # Register blueprints
 
     app.register_blueprint(chat_bp)
+    app.register_blueprint(config_bp)
 
     return app
 
