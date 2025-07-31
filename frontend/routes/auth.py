@@ -43,8 +43,18 @@ def authorized():
     )
 
     if 'id_token_claims' in result:
-        session['user'] = result['id_token_claims']
-        return redirect(url_for('chat.index'))
+        claims = result['id_token_claims']
+        user_groups = claims.get('groups', [])
+
+        if not any(group_id in allowed_group_ids for group_id in user_groups):
+            return "Access denied: you are not authorized.", 403
+        
+        session['user'] = {
+                'name': claims.get('name'),
+                'email': claims.get('preferred_username'),
+                'user_id': claims.get('oid')
+            }
+        return redirect(url_for('chat.load_history_all'))
     else:
         return f"Login failed: {result.get('error_description')}"
 

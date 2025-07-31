@@ -11,9 +11,25 @@
 </head>
 <body>
     <div class="sidebar">
-        <form method="post" action="/reset">
-            <button type="submit">🗘 New Chat</button>
-        </form>
+        <div class="new-chat">
+            <form method="post" action="/reset">
+                <button type="submit">🗘 New Chat</button>
+            </form>
+        </div>
+
+        <div class="chat-history-ids">
+            <h3 id="previous-chats">Previous chats</h3>
+            {% for history_id in history_ids %}
+            <div class="chat-history-id">
+                <form class="get-history-id-form" method="get" action="/history/{{ history_id }}">
+                    <button class="get-history-id-button" type="submit">{{ history_id }}</button>
+                </form>
+                <form class="delete-button-form" method="post" action="/delete/{{ history_id }}">
+                    <button class="delete-button" type="submit" title="Delete">🗑️</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="main">
