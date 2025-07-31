@@ -71,8 +71,11 @@ class ConversationHistoryResponse(BaseModel):
     session_id: str   
     history: List[Dict[str, str]]  
   
+
+
 class SessionResetRequest(BaseModel):  
-    session_id: str  
+    session_id: str
+
 
 class ConversationHistoryIds(BaseModel):
     session_ids: List[str]
@@ -103,7 +106,15 @@ async def reset_session(req: SessionResetRequest, request: Request):
     if not user_id:
         raise HTTPException(status_code=400, detail='Missing user ID')
 
-    session_id = req.session_id
+    return
+
+
+@app.post('/delete/{session_id}')
+async def delete_session(session_id: str, request: Request):
+    user_id = request.headers.get('X-User-ID')
+    if not user_id:
+        raise HTTPException(status_code=400, detail='Missing user ID')
+
     hist_key = f'{session_id}_chat_history'
 
     STATE_STORE.delete_session(user_id, session_id)
@@ -116,6 +127,7 @@ async def get_conversation_history(session_id: str, request: Request):
     history = STATE_STORE.get(user_id, f"{session_id}_chat_history", [])  
     return ConversationHistoryResponse(session_id=session_id, history=history)
 
+
 @app.get("/history", response_model=ConversationHistoryIds)  
 async def get_conversation_history(request: Request):
     user_id = request.headers.get('X-User-ID')
@@ -126,6 +138,7 @@ async def get_conversation_history(request: Request):
     logging.info(f'session_ids is: {session_ids}')
 
     return ConversationHistoryIds(session_ids=session_ids)
+  
   
 if __name__ == "__main__":  
     uvicorn.run(app, host="0.0.0.0", port=7000)  

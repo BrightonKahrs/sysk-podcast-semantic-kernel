@@ -1,5 +1,3 @@
-// static/js/chat.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chat-form');
     const input = document.getElementById('prompt-input');
@@ -27,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!res.ok) throw new Error('Request failed');
             const data = await res.json();
+
             if (!data.response) throw new Error('No response in JSON');
 
             const assistantMsg = document.createElement('div');

@@ -6,6 +6,24 @@ from flask import Blueprint, render_template, request, session, jsonify, redirec
 
 chat_bp = Blueprint('chat', __name__)
 
+### Helper Functions ###
+def load_user_history_into_session():
+    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
+    user_id = session.get('user', {}).get('user_id')
+
+    if not user_id:
+        return {'error': 'User not authenticated'}, 403
+
+    LOAD_URL = f'{BASE_BACKEND_URL}/history'
+    chat_res = requests.get(LOAD_URL, headers={'X-User-ID': user_id})
+
+    if chat_res.status_code != 200:
+        return {'error': 'Chat backend error'}, 500
+
+    session['history_ids'] = chat_res.json().get('session_ids')
+    return None  # success
+
+### Blueprint functions ###
 @chat_bp.before_request
 def require_login():
     user = session.get('user')
@@ -14,7 +32,7 @@ def require_login():
 
 @chat_bp.route('/home', methods=['GET'])
 def index():
-    if 'session_id' not in session:
+    if 'session_id' not in session or session.get('session_id') == None:
         session['session_id'] = str(uuid.uuid4())
     if 'conversation' not in session:
         session['conversation'] = []
@@ -27,7 +45,7 @@ def index():
 
 @chat_bp.route('/chat', methods=['POST'])
 def chat():
-    if 'session_id' not in session:
+    if 'session_id' not in session or session.get('session_id') == None:
         session['session_id'] = str(uuid.uuid4())
     if 'conversation' not in session:
         session['conversation'] = []
@@ -63,18 +81,13 @@ def chat():
 
     return jsonify({'response': response_text})
 
+
 @chat_bp.route('/reset', methods=['POST'])
 def reset():
-    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
-    SESSION_RESET_URL = f'{BASE_BACKEND_URL}/reset_session'
-
-    requests.post(
-        SESSION_RESET_URL,
-        json={'session_id': session['session_id']},
-        headers={'X-User-ID': session.get('user', {}).get('user_id')}
-    )
     session['conversation'] = []
-    return redirect(url_for('chat.index'))
+    session['session_id'] = None
+    return redirect(url_for('chat.load_history_all'))
+
 
 @chat_bp.route('/history/<session_id>', methods=['GET'])
 def load_chat(session_id):
@@ -99,24 +112,32 @@ def load_chat(session_id):
     
     return redirect(url_for('chat.index'))
 
-@chat_bp.route('/history', methods=['GET'])
-def load_history_all():
+@chat_bp.route('/delete/<session_id>', methods=['POST'])
+def delete_chat(session_id):
     BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
     user_id = session.get('user', {}).get('user_id')
 
     if not user_id:
         return jsonify({'error': 'User not authenticated'}), 403
 
-    LOAD_URL = f'{BASE_BACKEND_URL}/history'
+    DELETE_URL = f'{BASE_BACKEND_URL}/delete/{session_id}'
 
-    chat_res = requests.get(
-        LOAD_URL,
+    chat_res = requests.post(
+        DELETE_URL,
         headers={'X-User-ID': user_id}  # 🔒 secure header
     )
 
     if chat_res.status_code != 200:
         return jsonify({'error': 'Chat backend error'}), 500
+    
+    return redirect(url_for('chat.load_history_all'))
 
-    session['history_ids'] = chat_res.json().get('session_ids')
+@chat_bp.route('/history', methods=['GET'])
+def load_history_all():
+
+    err = load_user_history_into_session()
+
+    if err:
+        return jsonify(err[0]), err[1]
     
     return redirect(url_for('chat.index'))
