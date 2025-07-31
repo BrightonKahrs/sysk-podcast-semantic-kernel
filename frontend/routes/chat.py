@@ -66,3 +66,19 @@ def reset():
     requests.post(SESSION_RESET_URL, json={'session_id': session['session_id']})
     session['conversation'] = []
     return redirect(url_for('chat.index'))
+
+@chat_bp.route(f'/history/<session_id>', methods=['GET'])
+def load_chat(session_id):
+
+    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
+    LOAD_URL = f'{BASE_BACKEND_URL}/history/{session_id}'
+
+    chat_res = requests.get(LOAD_URL)
+
+    if chat_res.status_code != 200:
+        return jsonify({'error': 'Chat backend error'}), 500
+
+    session['session_id'] = chat_res.json().get('session_id')
+    session['conversation'] = chat_res.json().get('history')
+    
+    return redirect(url_for('chat.index'))

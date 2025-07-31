@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 from typing import Any, Dict, List, Optional
 import logging
+import json
 
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
@@ -50,21 +51,23 @@ class RagAgent(BaseAgent):
         # Create a thread to hold the conversation.
         self._thread: ChatHistoryAgentThread | None = None
         # Re‑create the thread from persisted state (if any)
-        if self.state and isinstance(self.state, dict) and "thread" in self.state:
+
+        if self.state:
+            self.state = json.loads(self.state)
+
+        if self.state and isinstance(self.state, dict) and 'thread' in self.state:
             try:
-                self._thread = self.state["thread"]
+                self._thread = self.create_thread_from_state(self.state)
                 logger.info("Restored thread from SESSION_STORE")
             except Exception as e:
-                logger.warning(f"Could not restore thread: {e}")
-
-        self._initialized = True
+                logger.warning(f"Error when restoring thread: {e}")
+        else:
+            logger.warning(f"State thread not found, starting from blank")
 
 
     async def chat_async(self, prompt: str) -> str:
         # Ensure agent/tools are ready and process the prompt.
         await self._setup_agent()
-
-        logging.debug(f"Thread is of type before response: {type(self._thread)}")
 
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
         
@@ -74,13 +77,10 @@ class RagAgent(BaseAgent):
         await connection_manager.broadcast_message_finished()
         
         response_content = str(response.content)
-
         self._thread = response.thread
 
-        logging.debug(f"Thread is of type after response: {type(self._thread)}")
-
         if self._thread:
-            self._setstate({"thread": self._thread})
+            self._setstate(self._thread)
 
         messages = [
             {"role": "user", "content": prompt},

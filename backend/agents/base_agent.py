@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 import json
 
 from functools import wraps
+from semantic_kernel.contents.chat_message_content import ChatMessageContent,FunctionCallContent,FunctionResultContent
+from semantic_kernel.agents import ChatHistoryAgentThread
+from semantic_kernel.contents.chat_history import ChatHistory
 
 from backend.utils.json_encoder import CustomEncoder
 
@@ -39,31 +42,71 @@ class BaseAgent:
   
 
     def _setstate(self, state: Any) -> None:
-        state = json.dumps({'thread': state}, cls=CustomEncoder)
-        # state = json.loads(state)
+        state = json.dumps({'thread': state}, cls=CustomEncoder) # Make JSON friendly version of thread state
         self.state_store[self.session_id] = state  
   
 
     def append_to_chat_history(self, messages: List[Dict[str, str]]) -> None:  
         self.chat_history.extend(messages)  
-        self.state_store[f"{self.session_id}_chat_history"] = self.chat_history  
+        self.state_store[f"{self.session_id}_chat_history"] = self.chat_history
+
+    def _parse_message(self, msg: dict) -> ChatMessageContent:
+        if 'tool_calls' in msg:
+            # Convert tool calls to FunctionCallContent
+            items = [
+                FunctionCallContent(
+                    id=call['id'],
+                    name=call['function']['name'],
+                    arguments=call['function']['arguments']
+                )
+                for call in msg['tool_calls']
+            ]
+            return ChatMessageContent(
+                role=msg['role'],
+                items=items,
+                name=msg.get('name'),
+            )
+        elif 'tool_call_id' in msg:
+            # This is likely a tool response
+            items = [
+                FunctionResultContent(
+                    id=msg['tool_call_id'],
+                    content=msg['content']
+                )
+            ]
+            return ChatMessageContent(
+                role=msg['role'],
+                items=items,
+                name=msg.get('name'),
+            )
+        else:
+            # Plain message
+            return ChatMessageContent(
+                role=msg['role'],
+                content=msg.get('content'),
+                name=msg.get('name'),
+            )
+    
+    def create_thread_from_state(self, state: dict) -> ChatHistoryAgentThread:
+        thread_data = state['thread']
+        chat_history_data = thread_data['_chat_history']
+        messages_data = chat_history_data['messages']
+
+        messages = [self._parse_message(msg) for msg in messages_data]
+
+        chat_history = ChatHistory(
+            messages=messages,
+            system_message=chat_history_data.get('system_message')
+        )
+
+        return ChatHistoryAgentThread(
+            chat_history=chat_history,
+            thread_id=thread_data['_id']
+        )
   
 
     async def chat_async(self, prompt: str) -> str:  
         """  
         Override in child class!  
         """  
-        raise NotImplementedError("chat_async should be implemented in subclass.")  
-    
-
-    def instrument_tool_call(self, func):
-        """
-        Wrapper method to send tool usage events to the frontend
-        """
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            tool_name = func.__name__
-            logging.debug(f'🔧 Tool called: {tool_name} with args: {kwargs}')
-            return await func(*args, **kwargs)
-        
-        return wrapper
+        raise NotImplementedError("chat_async should be implemented in subclass.")
