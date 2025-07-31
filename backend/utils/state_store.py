@@ -1,25 +1,7 @@
-"""  
-Key-value state-store utilities.  
-  
-Document schema  
----------------  
-{  
-    "id"        : "<session_id>",   # required by Cosmos  
-    "tenant_id" : "<tenant_id>",    # application tenant (defaults to "default")  
-    "value"     : <JSON-serialisable python object>  
-}  
-  
-Partition-key  
--------------  
-Hierarchical / multi-hash on                /tenant_id  +  /id  
-"""  
-  
 from __future__ import annotations  
   
-import json  
 import os  
-import logging  
-import collections.abc as abc  
+import logging 
 from typing import Any, Dict, Iterator, List, Optional  
   
 # ---------------------------------------------------------------------------  
@@ -32,7 +14,7 @@ from azure.identity import ClientSecretCredential, DefaultAzureCredential
 # ---------------------------------------------------------------------------  
 # Cosmos-backed implementation  
 # ---------------------------------------------------------------------------  
-class CosmosDBStateStore(abc.MutableMapping):  
+class CosmosDBStateStore():  
     """  
     Dict-like wrapper around a Cosmos DB container whose hierarchical  
     partition key is (tenant_id, id).  
@@ -50,7 +32,8 @@ class CosmosDBStateStore(abc.MutableMapping):
             raise RuntimeError("COSMOSDB_ENDPOINT must be defined")  
   
         # Data-level tenant (NOT the AAD tenant used for auth)  
-        self.tenant_id: str = os.getenv("DATA_AZURE_TENANT_ID", "default")  
+        self.tenant_id: str = os.getenv("DATA_AZURE_TENANT_ID", "default")
+        # self.user_id = "1111-1111-1111-1111"
   
         self.client = CosmosClient(endpoint, credential=self._create_credential())  
   
@@ -66,7 +49,7 @@ class CosmosDBStateStore(abc.MutableMapping):
         )  
   
         # Partition key: /tenant_id  +  /id  
-        pk = PartitionKey(path=["/tenant_id", "/id"], kind="MultiHash")  
+        pk = PartitionKey(path=["/tenant_id", "/user_id", "/id"], kind="MultiHash")  
   
         self.database = self.client.create_database_if_not_exists(id=db_name)  
         self.container = self.database.create_container_if_not_exists(  
@@ -99,62 +82,66 @@ class CosmosDBStateStore(abc.MutableMapping):
                 "No Cosmos key or AAD creds found, and azure-identity is missing."  
             )  
         logging.info("CosmosDBStateStore: authenticating with DefaultAzureCredential")  
-        return DefaultAzureCredential(exclude_interactive_browser_credential=True)  
+        return DefaultAzureCredential(exclude_interactive_browser_credential=True)
+    
+    # def _update_user_id(self, user_id: str):  
+    #     self.user_id = user_id
   
     # ------------------------- internal helpers -------------------------  
-    def _read(self, session_id: str) -> Optional[Dict[str, Any]]:  
+    def _read(self, user_id: str, session_id: str) -> Optional[Dict[str, Any]]:  
         try:  
             return self.container.read_item(  
                 item=session_id,  
-                partition_key=[self.tenant_id, session_id],  
+                partition_key=[self.tenant_id, user_id, session_id],  
             )  
         except cosmos_exceptions.CosmosResourceNotFoundError:  
             return None  
   
     # ------------------------- MutableMapping API -------------------------  
-    def __getitem__(self, session_id: str) -> Any:  
-        doc = self._read(session_id)  
-        if doc is None:  
-            raise KeyError(session_id)  
-        return doc["value"]  
-  
-    def get(self, session_id: str, default: Any = None):  # type: ignore[override]  
-        doc = self._read(session_id)  
+    def get(self, user_id: str, session_id: str, default: Any = None) -> Any:  
+        doc = self._read(user_id, session_id)  
         return default if doc is None else doc["value"]  
-  
-    def __setitem__(self, session_id: str, value: Any) -> None:  
+
+    def set(self, user_id: str, session_id: str, value: Any) -> None:  
         self.container.upsert_item(  
             {  
-                "id": session_id,          # unique within a tenant  
+                "id": session_id,  
                 "tenant_id": self.tenant_id,  
+                "user_id": user_id,  
                 "value": value,  
             }  
-        )  
+        )   
   
-    def __delitem__(self, session_id: str) -> None:  
+    def delete_session(self, user_id: str, session_id: str) -> None:  
         try:  
             self.container.delete_item(  
                 item=session_id,  
-                partition_key=[self.tenant_id, session_id],  
+                partition_key=[self.tenant_id, user_id, session_id],  
             )  
         except cosmos_exceptions.CosmosResourceNotFoundError:  
             raise KeyError(session_id)  
   
-    def __iter__(self) -> Iterator[str]:  
-        query = "SELECT c.id FROM c WHERE c.tenant_id = @tid"  
+    def list_session_ids(self, user_id: str) -> Iterator[str]:  
+        query = "SELECT c.id FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
         for doc in self.container.query_items(  
             query=query,  
-            parameters=[{"name": "@tid", "value": self.tenant_id}],  
+            parameters=[
+                {"name": "@tid", "value": self.tenant_id},
+                {"name": "@uid", "value": user_id},
+                ],  
             enable_cross_partition_query=True,  
         ):  
             yield doc["id"]  
   
-    def __len__(self) -> int:  
-        query = "SELECT VALUE COUNT(1) FROM c WHERE c.tenant_id = @tid"  
+    def count_session_ids(self, user_id: str) -> int:  
+        query = "SELECT VALUE COUNT(1) FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
         res: List[int] = list(  
             self.container.query_items(  
                 query=query,  
-                parameters=[{"name": "@tid", "value": self.tenant_id}],  
+                 parameters=[
+                    {"name": "@tid", "value": self.tenant_id},
+                    {"name": "@uid", "value": user_id},
+                ],   
                 enable_cross_partition_query=True,  
             )  
         )  
@@ -181,6 +168,3 @@ def get_state_store() -> Dict[str, Any] | CosmosDBStateStore:
   
     logging.info("Cosmos DB config absent → using in-memory dict")  
     return {}  # fallback
-
-# # Singleton pattern
-# chat_history_state_store = get_state_store()

@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class RagAgent(BaseAgent):
-    def __init__(self, state_store: Dict[str, Any], session_id: str) -> None:
-        super().__init__(state_store, session_id)
+    def __init__(self, state_store: Dict[str, Any], user_id: str, session_id: str) -> None:
+        super().__init__(state_store, user_id, session_id)
         self._agent = None
         self._initialized = False
 

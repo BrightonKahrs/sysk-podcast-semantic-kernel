@@ -10,6 +10,7 @@ from semantic_kernel.agents import ChatHistoryAgentThread
 from semantic_kernel.contents.chat_history import ChatHistory
 
 from backend.utils.json_encoder import CustomEncoder
+from backend.utils.state_store import CosmosDBStateStore
 
 # Configure logging
 logging.basicConfig(
@@ -27,28 +28,33 @@ class BaseAgent:
     Handles environment variables, state store, and chat history.  
     """  
   
-    def __init__(self, state_store: Dict[str, Any], session_id: str) -> None:  
+    def __init__(self, state_store: Dict[str, Any], user_id:str, session_id: str) -> None:  
         self.azure_deployment = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")  
         self.azure_openai_key = os.getenv("AZURE_OPENAI_API_KEY")  
         self.azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")  
         self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
   
         self.session_id = session_id  
-        self.state_store = state_store  
+        self.user_id = user_id
+        self.state_store = state_store
   
-        self.chat_history: List[Dict[str, str]] = self.state_store.get(f"{session_id}_chat_history", [])  
-        self.state: Optional[Any] = self.state_store.get(session_id, None) 
+        self.chat_history: List[Dict[str, str]] = self.state_store.get(user_id, f"{session_id}_chat_history", [])  
+        self.state: Optional[Any] = self.state_store.get(user_id, session_id, None) 
         logging.debug(f"Chat history for session {session_id}: {self.chat_history}")  
   
 
     def _setstate(self, state: Any) -> None:
         state = json.dumps({'thread': state}, cls=CustomEncoder) # Make JSON friendly version of thread state
-        self.state_store[self.session_id] = state  
+        self.state_store.set(self.user_id, self.session_id, state)
   
 
     def append_to_chat_history(self, messages: List[Dict[str, str]]) -> None:  
         self.chat_history.extend(messages)  
-        self.state_store[f"{self.session_id}_chat_history"] = self.chat_history
+        self.state_store.set(
+            user_id=self.user_id,          
+            session_id=f"{self.session_id}_chat_history",
+            value=self.chat_history
+        )
 
     def _parse_message(self, msg: dict) -> ChatMessageContent:
         if 'tool_calls' in msg:

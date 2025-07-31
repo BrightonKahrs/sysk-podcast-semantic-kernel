@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
   
 import uvicorn  
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
 from pydantic import BaseModel
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 from azure.ai.projects import AIProjectClient
@@ -52,7 +52,7 @@ app = FastAPI()
   
   
 class ChatRequest(BaseModel):  
-    session_id: str  
+    session_id: str
     prompt: str  
   
   
@@ -61,12 +61,14 @@ class ChatResponse(BaseModel):
   
   
 class ConversationHistoryResponse(BaseModel):  
-    session_id: str  
+    user_id: str
+    session_id: str   
     history: List[Dict[str, str]]  
   
   
 class SessionResetRequest(BaseModel):  
     session_id: str  
+    
 
 
 @app.websocket('/ws')
@@ -81,25 +83,31 @@ async def websocket_endpoint(websocket: WebSocket):
   
   
 @app.post("/chat", response_model=ChatResponse)  
-async def chat(req: ChatRequest):  
-    agent = RagAgent(STATE_STORE, req.session_id)  
+async def chat(req: ChatRequest, request: Request):
+    user_id = request.headers.get('X-User-ID')
+    agent = RagAgent(STATE_STORE, user_id, req.session_id)  
     answer = await agent.chat_async(req.prompt)  
     return ChatResponse(response=answer)  
   
   
-@app.post("/reset_session")  
-async def reset_session(req: SessionResetRequest):  
-    if req.session_id in STATE_STORE:  
-        del STATE_STORE[req.session_id]  
-    hist_key = f"{req.session_id}_chat_history"  
-    if hist_key in STATE_STORE:  
-        del STATE_STORE[hist_key]  
+@app.post('/reset_session')
+async def reset_session(req: SessionResetRequest, request: Request):
+    user_id = request.headers.get('X-User-ID')
+    if not user_id:
+        raise HTTPException(status_code=400, detail='Missing user ID')
+
+    session_id = req.session_id
+    hist_key = f'{session_id}_chat_history'
+
+    STATE_STORE.delete_session(user_id, session_id)
+    STATE_STORE.delete_session(user_id, hist_key)
   
   
 @app.get("/history/{session_id}", response_model=ConversationHistoryResponse)  
-async def get_conversation_history(session_id: str):  
+async def get_conversation_history(session_id: str, request: Request):
+    user_id = request.headers.get('X-User-ID')
     history = STATE_STORE.get(f"{session_id}_chat_history", [])  
-    return ConversationHistoryResponse(session_id=session_id, history=history)  
+    return ConversationHistoryResponse(user_id=user_id,session_id=session_id, history=history)  
   
   
 if __name__ == "__main__":  
