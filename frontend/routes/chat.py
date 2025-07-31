@@ -18,7 +18,12 @@ def index():
         session['session_id'] = str(uuid.uuid4())
     if 'conversation' not in session:
         session['conversation'] = []
-    return render_template('index.html', conversation=session['conversation'])
+        
+    return render_template(
+        'index.html',
+        conversation=session.get('conversation', []),
+        history_ids=session.get('history_ids', [])
+    )
 
 @chat_bp.route('/chat', methods=['POST'])
 def chat():
@@ -91,5 +96,27 @@ def load_chat(session_id):
 
     session['session_id'] = chat_res.json().get('session_id')
     session['conversation'] = chat_res.json().get('history')
+    
+    return redirect(url_for('chat.index'))
+
+@chat_bp.route('/history', methods=['GET'])
+def load_history_all():
+    BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
+    user_id = session.get('user', {}).get('user_id')
+
+    if not user_id:
+        return jsonify({'error': 'User not authenticated'}), 403
+
+    LOAD_URL = f'{BASE_BACKEND_URL}/history'
+
+    chat_res = requests.get(
+        LOAD_URL,
+        headers={'X-User-ID': user_id}  # 🔒 secure header
+    )
+
+    if chat_res.status_code != 200:
+        return jsonify({'error': 'Chat backend error'}), 500
+
+    session['history_ids'] = chat_res.json().get('session_ids')
     
     return redirect(url_for('chat.index'))

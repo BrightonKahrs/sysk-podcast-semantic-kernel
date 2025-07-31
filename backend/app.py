@@ -1,6 +1,7 @@
 from typing import Dict, List, Set
 from dotenv import load_dotenv
 import os
+import logging
   
 import uvicorn  
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
@@ -43,6 +44,12 @@ load_dotenv()  # read .env if present
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 # Set conversation state history
 STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore  
@@ -60,16 +67,16 @@ class ChatResponse(BaseModel):
     response: str  
   
   
-class ConversationHistoryResponse(BaseModel):  
-    user_id: str
+class ConversationHistoryResponse(BaseModel):
     session_id: str   
     history: List[Dict[str, str]]  
   
-  
 class SessionResetRequest(BaseModel):  
     session_id: str  
-    
 
+class ConversationHistoryIds(BaseModel):
+    session_ids: List[str]
+    
 
 @app.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
@@ -106,9 +113,19 @@ async def reset_session(req: SessionResetRequest, request: Request):
 @app.get("/history/{session_id}", response_model=ConversationHistoryResponse)  
 async def get_conversation_history(session_id: str, request: Request):
     user_id = request.headers.get('X-User-ID')
-    history = STATE_STORE.get(f"{session_id}_chat_history", [])  
-    return ConversationHistoryResponse(user_id=user_id,session_id=session_id, history=history)  
-  
+    history = STATE_STORE.get(user_id, f"{session_id}_chat_history", [])  
+    return ConversationHistoryResponse(session_id=session_id, history=history)
+
+@app.get("/history", response_model=ConversationHistoryIds)  
+async def get_conversation_history(request: Request):
+    user_id = request.headers.get('X-User-ID')
+    session_ids = list(STATE_STORE.list_session_ids(user_id))
+    session_ids = [id for id in session_ids if '_chat_history' not in id]
+
+    logging.info(f'session_ids is of type: {type(session_ids)}')
+    logging.info(f'session_ids is: {session_ids}')
+
+    return ConversationHistoryIds(session_ids=session_ids)
   
 if __name__ == "__main__":  
     uvicorn.run(app, host="0.0.0.0", port=7000)  

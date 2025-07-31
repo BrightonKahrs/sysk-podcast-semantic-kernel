@@ -54,7 +54,7 @@ def authorized():
                 'email': claims.get('preferred_username'),
                 'user_id': claims.get('oid')
             }
-        return redirect(url_for('chat.index'))
+        return redirect(url_for('chat.load_history_all'))
     else:
         return f"Login failed: {result.get('error_description')}"
 
