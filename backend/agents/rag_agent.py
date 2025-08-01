@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 from typing import Any, Dict, List, Optional
 import logging
+import json
 
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
@@ -9,12 +10,13 @@ from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.kernel_types import OptionalOneOrList
 from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
+from semantic_kernel.contents.chat_history import ChatHistory
+from semantic_kernel.contents.chat_message_content import ChatMessageContent
 
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
 from backend.plugins.menu_plugin import MenuPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager
-
 
 # Configure logging
 logging.basicConfig(
@@ -24,8 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class RagAgent(BaseAgent):
-    def __init__(self, state_store: Dict[str, Any], session_id: str) -> None:
-        super().__init__(state_store, session_id)
+    def __init__(self, state_store: Dict[str, Any], user_id: str, session_id: str) -> None:
+        super().__init__(state_store, user_id, session_id)
         self._agent = None
         self._initialized = False
 
@@ -34,8 +36,6 @@ class RagAgent(BaseAgent):
         """Initialize the assistant and tools only once."""
         if self._initialized:
             return
-        
-        #wrapped_ai_search_plugin = [self.instrument_tool_call(f) for f in azure_ai_search_plugin.functions]
 
         # Set up the chat completion agent with the Azure OpenAI service and Azure AI Search plugin.
         self._agent = ChatCompletionAgent(
@@ -51,14 +51,18 @@ class RagAgent(BaseAgent):
         # Create a thread to hold the conversation.
         self._thread: ChatHistoryAgentThread | None = None
         # Re‑create the thread from persisted state (if any)
-        if self.state and isinstance(self.state, dict) and "thread" in self.state:
+
+        if self.state:
+            self.state = json.loads(self.state)
+
+        if self.state and isinstance(self.state, dict) and 'thread' in self.state:
             try:
-                self._thread = self.state["thread"]
+                self._thread = self.create_thread_from_state(self.state)
                 logger.info("Restored thread from SESSION_STORE")
             except Exception as e:
-                logger.warning(f"Could not restore thread: {e}")
-
-        self._initialized = True
+                logger.warning(f"Error when restoring thread: {e}")
+        else:
+            logger.warning(f"State thread not found, starting from blank")
 
 
     async def chat_async(self, prompt: str) -> str:
@@ -73,10 +77,10 @@ class RagAgent(BaseAgent):
         await connection_manager.broadcast_message_finished()
         
         response_content = str(response.content)
-
         self._thread = response.thread
+
         if self._thread:
-            self._setstate({"thread": self._thread})
+            self._setstate(self._thread)
 
         messages = [
             {"role": "user", "content": prompt},

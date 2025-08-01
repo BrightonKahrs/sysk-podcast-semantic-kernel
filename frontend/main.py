@@ -10,6 +10,8 @@ from frontend.routes.chat import chat_bp
 from frontend.routes.config import config_bp
 from frontend.routes.auth import auth_bp
 
+
+
 load_dotenv()
 
 def create_app():

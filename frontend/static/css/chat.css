@@ -20,8 +20,48 @@ body {
     padding: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* top and bottom alignment */
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
+    font-size: 0.8rem;
+}
+
+.new-chat {
+    width: 100%; /* fills the sidebar's width */
+    margin-bottom: 1rem; /* optional spacing below */
+}
+
+.new-chat form {
+    width: 100%; /* make form fill .new-chat div */
+}
+
+.new-chat button {
+    width: 100%;           /* fill the form horizontally */
+    height: auto;          /* keep natural height */
+    padding: 0.5rem 1rem;  /* keep the padding from your existing buttons */
+    box-sizing: border-box; /* make sure padding included in width */
+    border-radius: 4px;     /* match your existing style */
+    cursor: pointer;
+
+    /* Optional: match your existing style */
+    background-color: #ffffff;
+    color: #333333;
+    border: none;
+    box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
+}
+
+#previous-chats{
+    margin-bottom: 0.4rem;
+}
+
+
+.chat-history-ids {
+    margin-top: 1rem;
+}
+
+.chat-history-id {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0.25rem 0;
 }
 
 .main {
@@ -62,6 +102,31 @@ body {
     flex: 1;
     overflow-y: auto;
     margin-bottom: 1rem;
+}
+
+.delete-button-form {
+    margin-left: 0.5rem;
+}
+
+.delete-button{
+    background: none;
+    border: none; 
+    cursor: pointer; 
+    padding: 0;
+}
+
+.get-history-id-form{
+    width: 100%; 
+    text-align: left; 
+    background: none; 
+    border: none; 
+    padding: 0; 
+    font: inherit; 
+    cursor: pointer;
+}
+.get-history-id-button{
+    flex-grow: 1; 
+    margin: 0;
 }
 
 .message.user {
