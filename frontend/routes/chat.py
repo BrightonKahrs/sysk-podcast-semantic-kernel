@@ -99,7 +99,7 @@ def chat():
     # return redirect(url_for('chat.index'))
 
 
-@chat_bp.route('/reset', methods=['POST'])
+@chat_bp.route('/reset', methods=['GET', 'POST'])
 def reset():
     session['conversation'] = []
     session['session_id'] = None
@@ -146,6 +146,9 @@ def delete_chat(session_id):
 
     if chat_res.status_code != 200:
         return jsonify({'error': 'Chat backend error'}), 500
+    
+    if session_id == session['session_id']:
+        return redirect(url_for('chat.reset'))
     
     return redirect(url_for('chat.load_history_all'))
 

@@ -78,6 +78,7 @@ body {
     margin-top: 0.25rem;
     box-shadow: none;
     transition: color 0.2s ease;
+    border-radius: 4px;
 }
 
 /* Fix 1: Allow truncation inside flex */
@@ -85,6 +86,7 @@ body {
     flex: 1;
     min-width: 0; /* 👈 Crucial for ellipsis to work in flex */
     margin: 0;
+    border-radius: 4px;
 }
 
 /* Fix 2: Make button text truncate correctly */
@@ -101,6 +103,7 @@ body {
     cursor: pointer;
     color:#ffffff;
     padding: 0.5rem 0rem;
+    border-radius: 4px;
 }
 
 .get-history-id-button:hover {
