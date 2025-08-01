@@ -49,7 +49,7 @@
         <div class="chat-history" id="chat-history">
             {% for msg in conversation %}
                 <div class="message {{ msg.role }}">
-                    <strong>{{ msg.role.title() }}:</strong> {{ msg.content }}
+                    <strong>{{ msg.role }}:</strong> {{ msg.content }}
                 </div>
             {% endfor %}
             <div id="loading-spinner" style="display: none;">
@@ -58,14 +58,14 @@
             </div>
         </div>
 
-        <form id="chat-form">
-            <input type="text" id="prompt-input" autocomplete="off" />
+        <form id="chat-form" method="post" action="/chat">
+            <input type="text" name="prompt" id="prompt-input" autocomplete="off" />
             <button class="submit-button" type="submit">Send</button>
         </form>
 
     </div>
 
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/chat.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/websocket_spinner.js') }}"></script>
     
 </body>

@@ -1,8 +1,15 @@
 # routes/chat.py
 import requests
 import uuid
+import logging
 
 from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, current_app
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -21,7 +28,6 @@ def load_user_history_into_session():
         return {'error': 'Chat backend error'}, 500
 
     session['history_ids'] = chat_res.json().get('session_ids')
-    return None  # success
 
 ### Blueprint functions ###
 @chat_bp.before_request
@@ -36,6 +42,7 @@ def index():
         session['session_id'] = str(uuid.uuid4())
     if 'conversation' not in session:
         session['conversation'] = []
+        load_user_history_into_session()
         
     return render_template(
         'index.html',
@@ -50,8 +57,7 @@ def chat():
     if 'conversation' not in session:
         session['conversation'] = []
 
-    data = request.get_json()
-    prompt = data.get('prompt')
+    prompt = request.form.get('prompt')
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
@@ -74,12 +80,17 @@ def chat():
 
     if chat_res.status_code != 200:
         return jsonify({'error': 'Chat backend error'}), 500
+    
+    # If first message / response cycle
+    if len(session['conversation']) < 3:
+        load_user_history_into_session()
 
     response_text = chat_res.json().get('response')
     session['conversation'].append({'role': 'assistant', 'content': response_text})
     session.modified = True
 
-    return jsonify({'response': response_text})
+    # return jsonify({'response': response_text})
+    return redirect(url_for('chat.index'))
 
 
 @chat_bp.route('/reset', methods=['POST'])
