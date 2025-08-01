@@ -108,7 +108,8 @@ class CosmosDBStateStore():
                 "id": session_id,  
                 "tenant_id": self.tenant_id,  
                 "user_id": user_id,  
-                "value": value,  
+                "title": "Chat Session",
+                "value": value
             }  
         )   
   
@@ -122,7 +123,7 @@ class CosmosDBStateStore():
             raise KeyError(session_id)  
   
     def list_session_ids(self, user_id: str) -> Iterator[str]:  
-        query = "SELECT c.id FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
+        query = "SELECT c.id as session_id, c.title as session_title FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
         for doc in self.container.query_items(  
             query=query,  
             parameters=[
@@ -131,7 +132,8 @@ class CosmosDBStateStore():
                 ],  
             enable_cross_partition_query=True,  
         ):  
-            yield doc["id"]  
+        
+            yield doc['session_id'], doc['session_title']
   
     def count_session_ids(self, user_id: str) -> int:  
         query = "SELECT VALUE COUNT(1) FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
