@@ -46,10 +46,6 @@ jobs:
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest -f Dockerfile.frontend .
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
 
-      - name: Upgrade az for containerapps
-        run: |
-          az extension add --name containerapp --upgrade
-
       - name: Deploy Backend to ACA
         run: |
           REVISION_SUFFIX=backend-$(date +%s)
@@ -57,7 +53,7 @@ jobs:
             --name sysk-ai-backend \
             --resource-group ai-sysk-demo \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
-            --revision-suffix $REVISION_SUFFIX
+            --revision-suffix $REVISION_SUFFIX \
             --set-env-vars \
               AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
               AZURE_OPENAI_ENDPOINT=https://azureopenai-ai-sysk.openai.azure.com \
@@ -85,7 +81,7 @@ jobs:
             --name sysk-ai-frontend-app \
             --resource-group ai-sysk-demo \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest \
-            --revision-suffix $REVISION_SUFFIX
+            --revision-suffix $REVISION_SUFFIX \
             --set-env-vars \
               ENVIRONMENT=CLOUD \
               BACKEND_URL=https://sysk-ai-backend.yellowmeadow-92ed4f99.eastus2.azurecontainerapps.io \
