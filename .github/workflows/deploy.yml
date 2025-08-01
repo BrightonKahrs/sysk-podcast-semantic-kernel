@@ -46,6 +46,10 @@ jobs:
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest -f Dockerfile.frontend .
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
 
+      - name: Upgrade az for containerapps
+        run: |
+          az extension add --name containerapp --upgrade
+
       - name: Deploy Backend to ACA
         run: |
           REVISION_SUFFIX=backend-$(date +%s)
@@ -62,9 +66,9 @@ jobs:
               AZURE_AI_SEARCH_ENDPOINT=https://ai-search-syskai.search.windows.net \
               AZURE_AI_SEARCH_API_KEY=${{ secrets.AZURE_AI_SEARCH_API_KEY }} \
               AZURE_AI_SEARCH_INDEX_NAME=sysk-podcast-episodes \
-              AZURE_CLIENT_ID= \
-              AZURE_CLIENT_SECRET= \
-              AZURE_TENANT_ID= \
+              AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }} \
+              AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }} \
+              AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }} \
               AZURE_AI_FOUNDRY_ENDPOINT=https://ai-foundry-hub-sysk.services.ai.azure.com/api/projects/ai-foundry-project-sysk \
               OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true \
               COSMOSDB_ENDPOINT=https://ai-sysk-demo-cdb.documents.azure.com:443/ \
