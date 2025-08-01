@@ -137,13 +137,7 @@ async def get_conversation_history(request: Request):
     user_id = request.headers.get('X-User-ID')
     session_ids = list(STATE_STORE.list_session_ids(user_id))
 
-    logging.info(f'session_ids is of type: {type(session_ids)}')
-    logging.info(f'session_ids is: {session_ids}')
-
-    session_ids = [ConversationHistoryId(session_id=id[0], title=id[1]) for id in session_ids if '_chat_history' not in id[0]]
-
-    logging.info(f'session_ids is of type: {type(session_ids)}')
-    logging.info(f'session_ids is: {session_ids}')
+    session_ids = [ConversationHistoryId(session_id=id[0].replace('_chat_history',''), title=id[1]) for id in session_ids]
 
     return ConversationHistoryIds(session_ids=session_ids)
   

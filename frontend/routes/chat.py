@@ -26,8 +26,10 @@ def load_user_history_into_session():
 
     if chat_res.status_code != 200:
         return {'error': 'Chat backend error'}, 500
+    
+    session_ids = chat_res.json().get('session_ids')
+    session['history_ids'] = session_ids
 
-    session['history_ids'] = chat_res.json().get('session_ids')
 
 ### Blueprint functions ###
 @chat_bp.before_request

@@ -13,6 +13,12 @@ from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 from backend.agents.title_summarizer_agent import TitleSummarizerAgent
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
   
 # ---------------------------------------------------------------------------  
 # Cosmos-backed implementation  
@@ -106,18 +112,26 @@ class CosmosDBStateStore():
         return default if doc is None else doc["value"]  
 
     async def set(self, user_id: str, session_id: str, value: Any) -> None:  
+        existing = self._read(user_id, session_id)
 
-        session_title = await self._summarize_session(value)
+        item = {
+            'id': session_id,
+            'tenant_id': self.tenant_id,
+            'user_id': user_id,
+            'value': value
+        }
 
-        self.container.upsert_item(  
-            {  
-                "id": session_id,  
-                "tenant_id": self.tenant_id,  
-                "user_id": user_id,  
-                "title": session_title,
-                "value": value
-            }  
-        )   
+        # Preserve title if it exists and save from a slow AOAI summary
+        if existing and 'title' in existing:
+            logging.info('TITLE FOUND: NOT SUMMARIZING CONTENT')
+            item['title'] = existing['title']
+        elif '_chat_history' in session_id:
+            logging.info('SUMMARIZING CHAT HISTORY CONTENT')
+            item['title'] = await self._summarize_session(value)
+        else:
+            logging.info('ONLY WILL SUMMARIZE CHAT HISTORY CONTENT')
+
+        self.container.upsert_item(item) 
 
     async def _summarize_session(self, session: str) -> str:
         summarizer_agent = TitleSummarizerAgent()
@@ -135,7 +149,16 @@ class CosmosDBStateStore():
             raise KeyError(session_id)  
   
     def list_session_ids(self, user_id: str) -> Iterator[str]:  
-        query = "SELECT c.id as session_id, c.title as session_title FROM c WHERE c.tenant_id = @tid AND c.user_id = @uid"  
+        query = """
+            SELECT 
+                c.id as session_id, 
+                c.title as session_title 
+            FROM c 
+            WHERE 
+                c.tenant_id = @tid 
+                AND c.user_id = @uid
+                AND CONTAINS (c.id, '_chat_history')
+            """  
         for doc in self.container.query_items(  
             query=query,  
             parameters=[
