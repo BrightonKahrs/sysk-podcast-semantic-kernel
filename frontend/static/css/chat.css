@@ -17,7 +17,7 @@ body {
     width: 200px;
     background-color: #333333;
     color: #ffffff;
-    padding: 1rem;
+    padding: 0.7rem;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
@@ -27,6 +27,7 @@ body {
 .new-chat {
     width: 100%; /* fills the sidebar's width */
     margin-bottom: 1rem; /* optional spacing below */
+    color: none; 
 }
 
 .new-chat form {
@@ -42,14 +43,27 @@ body {
     cursor: pointer;
 
     /* Optional: match your existing style */
-    background-color: #ffffff;
     color: #333333;
-    border: none;
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
+
+    display: flex;
+    align-items: center;   /* vertical center */
+    justify-content: center; /* horizontal center */
+    padding: 0.25rem;       /* optional spacing */
+
+    height: 33px;
+
+    display: inline-flex;
+    gap: 0.5rem; /* controls spacing between icon and text */
+    padding: 0.5rem 1rem; /* optional */
+    border: none;
+    font: inherit;
+    font-size: 0.8rem;
 }
 
 #previous-chats{
     margin-bottom: 0.4rem;
+    font-size: 0.8rem;
 }
 
 
@@ -58,12 +72,65 @@ body {
 }
 
 .chat-history-id {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    padding: 0rem 0;
+    background-color: none;
+    margin-top: 0.25rem;
+    box-shadow: none;
+    transition: color 0.2s ease;
 }
 
+/* Fix 1: Allow truncation inside flex */
+.get-history-id-form {
+    flex: 1;
+    min-width: 0; /* 👈 Crucial for ellipsis to work in flex */
+    margin: 0;
+}
+
+/* Fix 2: Make button text truncate correctly */
+.get-history-id-button {
+    width: 100%;
+    text-align: left;
+    box-shadow: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    color:#ffffff;
+}
+
+.get-history-id-button:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+.delete-button-form {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;   /* vertical center */
+    justify-content: center; /* horizontal center */
+    padding: 0.25rem;       /* optional spacing */
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: .25rem;
+}
+
+.icon {
+    height: 1rem;
+    width: 1rem;
+    color: rgba(255, 255, 255, 0.15);
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.icon:hover {
+    color: red; /* for contrast */
+    border-radius: 4px; /* optional */
+}
 .main {
     flex: 1;
     padding: 2rem;
@@ -102,31 +169,6 @@ body {
     flex: 1;
     overflow-y: auto;
     margin-bottom: 1rem;
-}
-
-.delete-button-form {
-    margin-left: 0.5rem;
-}
-
-.delete-button{
-    background: none;
-    border: none; 
-    cursor: pointer; 
-    padding: 0;
-}
-
-.get-history-id-form{
-    width: 100%; 
-    text-align: left; 
-    background: none; 
-    border: none; 
-    padding: 0; 
-    font: inherit; 
-    cursor: pointer;
-}
-.get-history-id-button{
-    flex-grow: 1; 
-    margin: 0;
 }
 
 .message.user {
