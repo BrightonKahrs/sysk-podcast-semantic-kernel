@@ -10,6 +10,9 @@ from typing import Any, Dict, Iterator, List, Optional
   
 from azure.cosmos import CosmosClient, PartitionKey, exceptions as cosmos_exceptions
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+
+from backend.agents.title_summarizer_agent import TitleSummarizerAgent
   
 # ---------------------------------------------------------------------------  
 # Cosmos-backed implementation  
@@ -102,16 +105,25 @@ class CosmosDBStateStore():
         doc = self._read(user_id, session_id)  
         return default if doc is None else doc["value"]  
 
-    def set(self, user_id: str, session_id: str, value: Any) -> None:  
+    async def set(self, user_id: str, session_id: str, value: Any) -> None:  
+
+        session_title = await self._summarize_session(value)
+
         self.container.upsert_item(  
             {  
                 "id": session_id,  
                 "tenant_id": self.tenant_id,  
                 "user_id": user_id,  
-                "title": "Chat Session",
+                "title": session_title,
                 "value": value
             }  
         )   
+
+    async def _summarize_session(self, session: str) -> str:
+        summarizer_agent = TitleSummarizerAgent()
+        response = await summarizer_agent.summarize_content(session)
+        return response
+
   
     def delete_session(self, user_id: str, session_id: str) -> None:  
         try:  
