@@ -4,3 +4,6 @@ This repo aims to create a Semantic Kernel based agent for chatting over Stuff Y
 
 ## Architecture Diagram
 ![Screenshot](assets/architecture_diagram.png)
+
+## Example Azure Resource Group
+![Screenshot](assets/azure_rg.png)

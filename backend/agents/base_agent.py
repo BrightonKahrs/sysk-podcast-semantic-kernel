@@ -43,14 +43,14 @@ class BaseAgent:
         logging.debug(f"Chat history for session {session_id}: {self.chat_history}")  
   
 
-    def _setstate(self, state: Any) -> None:
+    async def _setstate(self, state: Any) -> None:
         state = json.dumps({'thread': state}, cls=CustomEncoder) # Make JSON friendly version of thread state
-        self.state_store.set(self.user_id, self.session_id, state)
+        await self.state_store.set(self.user_id, self.session_id, state)
   
 
-    def append_to_chat_history(self, messages: List[Dict[str, str]]) -> None:  
+    async def append_to_chat_history(self, messages: List[Dict[str, str]]) -> None:  
         self.chat_history.extend(messages)  
-        self.state_store.set(
+        await self.state_store.set(
             user_id=self.user_id,          
             session_id=f"{self.session_id}_chat_history",
             value=self.chat_history

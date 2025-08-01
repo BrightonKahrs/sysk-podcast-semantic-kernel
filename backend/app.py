@@ -20,26 +20,26 @@ load_dotenv()  # read .env if present
 
 
 # Set up telemetry - requires an AZ login via Service Principal
-# OpenAIInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
 
-# client_id = os.getenv('AZURE_CLIENT_ID')
-# client_secret = os.getenv('AZURE_CLIENT_SECRET')
-# tenant_id = os.getenv('AZURE_TENANT_ID')
-# endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
+client_id = os.getenv('AZURE_CLIENT_ID')
+client_secret = os.getenv('AZURE_CLIENT_SECRET')
+tenant_id = os.getenv('AZURE_TENANT_ID')
+endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
 
-# credential = ClientSecretCredential(
-#     tenant_id=tenant_id,
-#     client_id=client_id,
-#     client_secret=client_secret,
-# )
+credential = ClientSecretCredential(
+    tenant_id=tenant_id,
+    client_id=client_id,
+    client_secret=client_secret,
+)
 
-# project_client = AIProjectClient(
-#     credential=credential,
-#     endpoint=endpoint,
-# )
+project_client = AIProjectClient(
+    credential=credential,
+    endpoint=endpoint,
+)
 
-# connection_string = project_client.telemetry.get_connection_string()
-# configure_azure_monitor(connection_string=connection_string)
+connection_string = project_client.telemetry.get_connection_string()
+configure_azure_monitor(connection_string=connection_string)
 
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
@@ -77,8 +77,12 @@ class SessionResetRequest(BaseModel):
     session_id: str
 
 
+class ConversationHistoryId(BaseModel):
+    session_id: str
+    title: str
+
 class ConversationHistoryIds(BaseModel):
-    session_ids: List[str]
+    session_ids: List[ConversationHistoryId]
     
 
 @app.websocket('/ws')
@@ -132,10 +136,8 @@ async def get_conversation_history(session_id: str, request: Request):
 async def get_conversation_history(request: Request):
     user_id = request.headers.get('X-User-ID')
     session_ids = list(STATE_STORE.list_session_ids(user_id))
-    session_ids = [id for id in session_ids if '_chat_history' not in id]
 
-    logging.info(f'session_ids is of type: {type(session_ids)}')
-    logging.info(f'session_ids is: {session_ids}')
+    session_ids = [ConversationHistoryId(session_id=id[0].replace('_chat_history',''), title=id[1]) for id in session_ids]
 
     return ConversationHistoryIds(session_ids=session_ids)
   

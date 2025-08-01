@@ -80,12 +80,12 @@ class RagAgent(BaseAgent):
         self._thread = response.thread
 
         if self._thread:
-            self._setstate(self._thread)
+            await self._setstate(self._thread)
 
         messages = [
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": response_content},
         ]
-        self.append_to_chat_history(messages)
+        await self.append_to_chat_history(messages)
 
         return response_content
