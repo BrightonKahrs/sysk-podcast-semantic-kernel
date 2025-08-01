@@ -54,6 +54,25 @@ jobs:
             --resource-group ai-sysk-demo \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
             --revision-suffix $REVISION_SUFFIX
+            --set-env-vars \
+              AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
+              AZURE_OPENAI_ENDPOINT=https://azureopenai-ai-sysk.openai.azure.com \
+              AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4.1-mini \
+              AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-3-small \
+              AZURE_AI_SEARCH_ENDPOINT=https://ai-search-syskai.search.windows.net \
+              AZURE_AI_SEARCH_API_KEY=${{ secrets.AZURE_AI_SEARCH_API_KEY }} \
+              AZURE_AI_SEARCH_INDEX_NAME=sysk-podcast-episodes \
+              AZURE_CLIENT_ID= \
+              AZURE_CLIENT_SECRET= \
+              AZURE_TENANT_ID= \
+              AZURE_AI_FOUNDRY_ENDPOINT=https://ai-foundry-hub-sysk.services.ai.azure.com/api/projects/ai-foundry-project-sysk \
+              OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true \
+              COSMOSDB_ENDPOINT=https://ai-sysk-demo-cdb.documents.azure.com:443/ \
+              COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }} \
+              DATA_TENANT_ID=default \
+              COSMOSDB_DB_NAME=ai_state_db \
+              COSMOSDB_CONTAINER_NAME=state_store_user
+
 
       - name: Deploy Frontend to ACA
         run: |
@@ -63,3 +82,13 @@ jobs:
             --resource-group ai-sysk-demo \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest \
             --revision-suffix $REVISION_SUFFIX
+            --set-env-vars \
+              ENVIRONMENT=CLOUD \
+              BACKEND_URL=https://sysk-ai-backend.yellowmeadow-92ed4f99.eastus2.azurecontainerapps.io \
+              PORT=80 \
+              CLIENT_ID=${{ secrets.CLIENT_ID }} \
+              CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+              TENANT_ID=${{ secrets.TENANT_ID }} \
+              AUTHORITY=${{ secrets.AUTHORITY}} \
+              REDIRECT_PATH=/auth/redirect \
+              SCOPE=email
