@@ -68,15 +68,15 @@ class CosmosDBStateStore():
   
     # ------------------------- authentication helpers -------------------------  
     def _create_credential(self):  
-        key = os.getenv("COSMOSDB_KEY").strip('"')
+        key = os.getenv("COSMOSDB_KEY")
         if key:  
             logging.info("CosmosDBStateStore: authenticating with KEY")  
-            return key  
+            return key.strip('"')
   
         c_id, c_secret, t_id = (  
-            os.getenv("AZURE_CLIENT_ID"),  
-            os.getenv("AZURE_CLIENT_SECRET"),  
-            os.getenv("AZURE_TENANT_ID"),  
+            os.getenv("CLIENT_ID"),  
+            os.getenv("CLIENT_SECRET"),  
+            os.getenv("TENANT_ID"),  
         )  
         if c_id and c_secret and t_id:  
             if ClientSecretCredential is None:  
