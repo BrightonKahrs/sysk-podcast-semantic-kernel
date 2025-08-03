@@ -15,6 +15,7 @@ from semantic_kernel.contents.chat_message_content import ChatMessageContent
 
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
 from backend.plugins.menu_plugin import MenuPlugin
+from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager
 
@@ -42,9 +43,17 @@ class RagAgent(BaseAgent):
             name="PodcastAgent",
             description="An agent that can answer questions about the Stuff You Should Know podcast episodes.",
             service = AzureChatCompletion(),
-            instructions="You are a helpful assistant that can answer questions about the Stuff You Should Know podcast episodes. Use the Azure AI Search to find relevant information.",
+            instructions="""
+            You are a helpful assistant that can answer questions about the Stuff You Should Know podcast episodes. 
+            Use the AnalyticsPlugin to run sql statements to answer analytics style questions of the podcast episodes - for example this would be a good tool to use if a user asks "how many podcast episodes aired in 2023?"
+            Use the azure_ai_search_plugin to get detailed information about episodes, including the description and specific transcripts.
+
+            When using the AnalyticsPlugin-query_sql tool. You MUST pass it only a tsql readable query string and nothing else
+
+            Where it makes sense, use a combination of the plugins to come to the right answer
+            """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[azure_ai_search_plugin, MenuPlugin()],
+            plugins=[azure_ai_search_plugin, AnalyticsPlugin()],
         )
 
 
