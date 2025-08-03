@@ -71,7 +71,9 @@ jobs:
               COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }} \
               DATA_TENANT_ID=default \
               COSMOSDB_DB_NAME=ai_state_db \
-              COSMOSDB_CONTAINER_NAME=state_store_user
+              COSMOSDB_CONTAINER_NAME=state_store_user \
+              fabric_sql_endpoint=azlqzg46gwkutge4j7ome64ite-3o64hwfh2rlebeuv2m7h6my5q4.datawarehouse.fabric.microsoft.com \
+              fabric_sql_database=sysk_silver_lh
 
 
       - name: Deploy Frontend to ACA
