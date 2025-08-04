@@ -42,4 +42,3 @@ docker run -d `
   $frontendName
 
 Write-Host "All containers are up and running!"
-
