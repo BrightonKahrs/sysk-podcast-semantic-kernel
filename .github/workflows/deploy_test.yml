@@ -75,7 +75,10 @@ jobs:
               COSMOSDB_CONTAINER_NAME=${{ vars.COSMOSDB_CONTAINER_NAME }} \
               fabric_sql_endpoint=${{ vars.FABRIC_SQL_ENDPOINT }} \
               fabric_sql_database=${{ vars.FABRIC_SQL_DATABASE }} \
-              COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }}
+              COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }} \
+              CLIENT_ID=${{ vars.CLIENT_ID }} \
+              CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+              TENANT_ID=${{ vars.TENANT_ID }}
 
 
       - name: Deploy Frontend to ACA
