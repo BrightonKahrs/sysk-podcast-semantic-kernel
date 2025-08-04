@@ -74,7 +74,8 @@ jobs:
               COSMOSDB_DB_NAME=${{ vars.COSMOSDB_DB_NAME }} \
               COSMOSDB_CONTAINER_NAME=${{ vars.COSMOSDB_CONTAINER_NAME }} \
               fabric_sql_endpoint=${{ vars.FABRIC_SQL_ENDPOINT }} \
-              fabric_sql_database=${{ vars.FABRIC_SQL_DATABASE }}
+              fabric_sql_database=${{ vars.FABRIC_SQL_DATABASE }} \
+              COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }}
 
 
       - name: Deploy Frontend to ACA
