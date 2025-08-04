@@ -11,12 +11,6 @@ from semantic_kernel.contents.chat_history import ChatHistory
 
 from backend.utils.json_encoder import CustomEncoder
 from backend.utils.state_store import CosmosDBStateStore
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
   
 load_dotenv()  # Load environment variables from .env file if needed 
 

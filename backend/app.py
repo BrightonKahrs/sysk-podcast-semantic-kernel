@@ -14,42 +14,54 @@ from azure.monitor.opentelemetry import configure_azure_monitor
 from backend.utils.connection_manager import connection_manager
 from backend.utils.state_store import get_state_store
 from backend.agents.rag_agent import RagAgent  # Import the RagAgent class
+
+# Set up logging
+logging.basicConfig(
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Suppress uvicorn logs
+logging.getLogger('uvicorn.access').setLevel(logging.CRITICAL)
+logging.getLogger('uvicorn').setLevel(logging.ERROR)
+
+# Suppress Azure SDK logs
+logging.getLogger('azure.core.pipeline').setLevel(logging.CRITICAL)
+
+# Suppress Application Insights telemetry logs
+logging.getLogger('opencensus').setLevel(logging.CRITICAL)
+logging.getLogger('opencensus.trace').setLevel(logging.CRITICAL)
+logging.getLogger('opencensus.ext.azure.common.transport').setLevel(logging.CRITICAL)
+logging.getLogger('opencensus.ext.azure.common').setLevel(logging.CRITICAL)
   
 #Setup from environment
 load_dotenv()  # read .env if present  
 
 
 # Set up telemetry - requires an AZ login via Service Principal
-OpenAIInstrumentor().instrument()
+# OpenAIInstrumentor().instrument()
 
-client_id = os.getenv('CLIENT_ID')
-client_secret = os.getenv('CLIENT_SECRET')
-tenant_id = os.getenv('TENANT_ID')
-endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
+# client_id = os.getenv('CLIENT_ID')
+# client_secret = os.getenv('CLIENT_SECRET')
+# tenant_id = os.getenv('TENANT_ID')
+# endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
 
-credential = ClientSecretCredential(
-    tenant_id=tenant_id,
-    client_id=client_id,
-    client_secret=client_secret,
-)
+# credential = ClientSecretCredential(
+#     tenant_id=tenant_id,
+#     client_id=client_id,
+#     client_secret=client_secret,
+# )
 
-project_client = AIProjectClient(
-    credential=credential,
-    endpoint=endpoint,
-)
+# project_client = AIProjectClient(
+#     credential=credential,
+#     endpoint=endpoint,
+# )
 
-connection_string = project_client.telemetry.get_connection_string()
-configure_azure_monitor(connection_string=connection_string)
+# connection_string = project_client.telemetry.get_connection_string()
+# configure_azure_monitor(connection_string=connection_string)
 
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
 
 # Set conversation state history
 STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore  
