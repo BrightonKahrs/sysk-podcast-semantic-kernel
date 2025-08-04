@@ -19,13 +19,6 @@ from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-
 class RagAgent(BaseAgent):
     def __init__(self, state_store: Dict[str, Any], user_id: str, session_id: str) -> None:
         super().__init__(state_store, user_id, session_id)
@@ -67,11 +60,10 @@ class RagAgent(BaseAgent):
         if self.state and isinstance(self.state, dict) and 'thread' in self.state:
             try:
                 self._thread = self.create_thread_from_state(self.state)
-                logger.info("Restored thread from SESSION_STORE")
             except Exception as e:
-                logger.warning(f"Error when restoring thread: {e}")
+                pass
         else:
-            logger.warning(f"State thread not found, starting from blank")
+            pass
 
 
     async def chat_async(self, prompt: str) -> str:
