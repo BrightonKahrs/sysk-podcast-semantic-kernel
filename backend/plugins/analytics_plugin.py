@@ -23,8 +23,8 @@ class AnalyticsPlugin:
         client_id = os.getenv("CLIENT_ID")  
         client_secret = os.getenv("CLIENT_SECRET")
 
-        server = os.getenv('fabric_sql_endpoint')
-        database = os.getenv('fabric_sql_database')
+        server = os.getenv('FABRIC_SQL_ENDPOINT')
+        database = os.getenv('FABRIC_SQL_DATABASE')
 
         # --- Authenticate with MSAL ---
         authority = f'https://login.microsoftonline.com/{tenant_id}'
