@@ -22,9 +22,9 @@ load_dotenv()  # read .env if present
 # Set up telemetry - requires an AZ login via Service Principal
 OpenAIInstrumentor().instrument()
 
-client_id = os.getenv('AZURE_CLIENT_ID')
-client_secret = os.getenv('AZURE_CLIENT_SECRET')
-tenant_id = os.getenv('AZURE_TENANT_ID')
+client_id = os.getenv('CLIENT_ID')
+client_secret = os.getenv('CLIENT_SECRET')
+tenant_id = os.getenv('TENANT_ID')
 endpoint = os.getenv('AZURE_AI_FOUNDRY_ENDPOINT')
 
 credential = ClientSecretCredential(
