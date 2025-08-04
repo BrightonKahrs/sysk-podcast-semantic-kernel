@@ -73,8 +73,8 @@ jobs:
               DATA_TENANT_ID=${{ vars.DATA_TENANT_ID }} \
               COSMOSDB_DB_NAME=${{ vars.COSMOSDB_DB_NAME }} \
               COSMOSDB_CONTAINER_NAME=${{ vars.COSMOSDB_CONTAINER_NAME }} \
-              fabric_sql_endpoint=${{ vars.FABRIC_SQL_ENDPOINT }} \
-              fabric_sql_database=${{ vars.FABRIC_SQL_DATABASE }} \
+              FABRIC_SQL_ENDPOINT=${{ vars.FABRIC_SQL_ENDPOINT }} \
+              FABRIC_SQL_DATABASE=${{ vars.FABRIC_SQL_DATABASE }} \
               COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }} \
               CLIENT_ID=${{ vars.CLIENT_ID }} \
               CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
