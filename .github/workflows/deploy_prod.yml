@@ -1,0 +1,98 @@
+# .github/workflows/deploy_prod.yml
+
+name: Build and Deploy Production Environment to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+
+      - name: Login to ACR with Service Principal
+        run: |
+          az acr login --name ${{ vars.REGISTRY_LOGIN_SERVER }}
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ vars.REGISTRY_LOGIN_SERVER }}/backend:latest -f Dockerfile.backend .
+          docker push ${{ vars.REGISTRY_LOGIN_SERVER }}/backend:latest
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ${{ vars.REGISTRY_LOGIN_SERVER }}/frontend:latest -f Dockerfile.frontend .
+          docker push ${{ vars.REGISTRY_LOGIN_SERVER }}/frontend:latest
+
+      - name: Deploy Backend to ACA
+        run: |
+          REVISION_SUFFIX=backend-$(date +%s)
+          az containerapp update \
+            --name ${{ vars.ACA_BACKEND_APP_NAME }} \
+            --resource-group ${{ vars.RESOURCE_GROUP }} \
+            --image ${{ vars.REGISTRY_LOGIN_SERVER }}/backend:latest \
+            --revision-suffix $REVISION_SUFFIX \
+            --set-env-vars \
+              AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
+              AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} \
+              AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT_NAME}} \
+              AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME}} \
+              AZURE_AI_SEARCH_ENDPOINT=${{ vars.AZURE_AI_SEARCH_ENDPOINT }} \
+              AZURE_AI_SEARCH_API_KEY=${{ secrets.AZURE_AI_SEARCH_API_KEY }} \
+              AZURE_AI_SEARCH_INDEX_NAME=${{ vars.AZURE_AI_SEARCH_INDEX_NAME }} \
+              AZURE_CLIENT_ID=${{ vars.AZURE_CLIENT_ID }} \
+              AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }} \
+              AZURE_TENANT_ID=${{ vars.AZURE_TENANT_ID }} \
+              AZURE_AI_FOUNDRY_ENDPOINT=${{ vars.AZURE_AI_FOUNDRY_ENDPOINT }} \
+              OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=${{ vars.OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT }} \
+              COSMOSDB_ENDPOINT=${{ vars.COSMOSDB_ENDPOINT }} \
+              DATA_TENANT_ID=${{ vars.DATA_TENANT_ID }} \
+              COSMOSDB_DB_NAME=${{ vars.COSMOSDB_DB_NAME }} \
+              COSMOSDB_CONTAINER_NAME=${{ vars.COSMOSDB_CONTAINER_NAME }} \
+              fabric_sql_endpoint=${{ vars.FABRIC_SQL_ENDPOINT }} \
+              fabric_sql_database=${{ vars.FABRIC_SQL_DATABASE }} \
+              COSMOSDB_KEY=${{ secrets.COSMOSDB_KEY }}
+
+
+      - name: Deploy Frontend to ACA
+        run: |
+          REVISION_SUFFIX=frontend-$(date +%s)
+          az containerapp update \
+            --name ${{ vars.ACA_FRONTEND_APP_NAME }} \
+            --resource-group ${{ vars.RESOURCE_GROUP }} \
+            --image ${{ vars.REGISTRY_LOGIN_SERVER }}/frontend:latest \
+            --revision-suffix $REVISION_SUFFIX \
+            --set-env-vars \
+              ENVIRONMENT=${{ vars.ENVIRONMENT }} \
+              BACKEND_URL=${{ vars.BACKEND_URL }} \
+              PORT=${{ vars.PORT }} \
+              CLIENT_ID=${{ vars.CLIENT_ID }} \
+              CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+              TENANT_ID=${{ vars.TENANT_ID }} \
+              AUTHORITY=${{ vars.AUTHORITY}} \
+              REDIRECT_PATH=${{ vars.REDIRECT_PATH }} \
+              SCOPE=${{ vars.SCOPE }}
