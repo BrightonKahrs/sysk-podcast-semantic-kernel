@@ -13,12 +13,6 @@ from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 from backend.agents.title_summarizer_agent import TitleSummarizerAgent
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
   
 # ---------------------------------------------------------------------------  
 # Cosmos-backed implementation  
