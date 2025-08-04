@@ -8,4 +8,4 @@ $DatabaseAccountName = "ai-sysk-demo-dev-cdb"
 az deployment group create `
   --resource-group $ResourceGroup `
   --template-file "update-cosmos.bicep" `
-  --parameters databaseAccounts_ai_sysk_demo_cdb_name=$DatabaseAccountName
+  --parameters databaseAccounts_ai_sysk_demo_dev_cdb_name=$DatabaseAccountName
