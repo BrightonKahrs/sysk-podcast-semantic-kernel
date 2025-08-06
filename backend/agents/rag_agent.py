@@ -1,30 +1,28 @@
 # Copyright (c) Microsoft. All rights reserved.
-from typing import Any, Dict, List, Optional
-import logging
+from typing import Any, Dict
 import json
 
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-from semantic_kernel.agents import AgentThread, ChatCompletionAgent
-from semantic_kernel.connectors.ai import FunctionChoiceBehavior
-from semantic_kernel.kernel_types import OptionalOneOrList
-from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
-from semantic_kernel.contents.chat_history import ChatHistory
-from semantic_kernel.contents.chat_message_content import ChatMessageContent
 
-from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
-from backend.plugins.menu_plugin import MenuPlugin
+from backend.plugins.azure_ai_search_plugin import AzureAISearchPlugin
 from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
-from backend.utils.connection_manager import connection_manager
+from backend.utils.connection_manager import ConnectionManager
+
 
 class RagAgent(BaseAgent):
-    def __init__(self, state_store: Dict[str, Any], user_id: str, session_id: str) -> None:
-        super().__init__(state_store, user_id, session_id)
+    def __init__(
+        self,
+        state_store: Dict[str, Any],
+        connection_manager: ConnectionManager,
+        user_id: str,
+        session_id: str,
+    ) -> None:
+        super().__init__(state_store, connection_manager, user_id, session_id)
         self._agent = None
         self._initialized = False
-
 
     async def _setup_agent(self) -> None:
         """Initialize the assistant and tools only once."""
@@ -35,7 +33,7 @@ class RagAgent(BaseAgent):
         self._agent = ChatCompletionAgent(
             name="PodcastAgent",
             description="An agent that can answer questions about the Stuff You Should Know podcast episodes.",
-            service = AzureChatCompletion(),
+            service=AzureChatCompletion(),
             instructions="""
             You are a helpful assistant that can answer questions about the Stuff You Should Know podcast episodes. 
             Use the AnalyticsPlugin to run sql statements to answer analytics style questions of the podcast episodes - for example this would be a good tool to use if a user asks "how many podcast episodes aired in 2023?"
@@ -46,9 +44,11 @@ class RagAgent(BaseAgent):
             Where it makes sense, use a combination of the plugins to come to the right answer
             """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[azure_ai_search_plugin, AnalyticsPlugin()],
+            plugins=[
+                AzureAISearchPlugin(self.connection_manager),
+                AnalyticsPlugin(self.connection_manager),
+            ],
         )
-
 
         # Create a thread to hold the conversation.
         self._thread: ChatHistoryAgentThread | None = None
@@ -57,26 +57,18 @@ class RagAgent(BaseAgent):
         if self.state:
             self.state = json.loads(self.state)
 
-        if self.state and isinstance(self.state, dict) and 'thread' in self.state:
+        if self.state and isinstance(self.state, dict) and "thread" in self.state:
             try:
                 self._thread = self.create_thread_from_state(self.state)
             except Exception as e:
                 pass
-        else:
-            pass
-
 
     async def chat_async(self, prompt: str) -> str:
         # Ensure agent/tools are ready and process the prompt.
         await self._setup_agent()
-
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
-        
-        logging.debug(f"Response type: {type(response)}")
-        logging.debug(f"Response: {response}")
+        await self.connection_manager.broadcast_message_finished()
 
-        await connection_manager.broadcast_message_finished()
-        
         response_content = str(response.content)
         self._thread = response.thread
 
