@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft. All rights reserved.
 from typing import Any, Dict
-import logging
 import json
 
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
@@ -10,14 +9,18 @@ from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
 from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
-from backend.utils.connection_manager import connection_manager
+from backend.utils.connection_manager import ConnectionManager
 
 
 class RagAgent(BaseAgent):
     def __init__(
-        self, state_store: Dict[str, Any], user_id: str, session_id: str
+        self,
+        state_store: Dict[str, Any],
+        connection_manager: ConnectionManager,
+        user_id: str,
+        session_id: str,
     ) -> None:
-        super().__init__(state_store, user_id, session_id)
+        super().__init__(state_store, connection_manager, user_id, session_id)
         self._agent = None
         self._initialized = False
 
@@ -56,19 +59,12 @@ class RagAgent(BaseAgent):
                 self._thread = self.create_thread_from_state(self.state)
             except Exception as e:
                 pass
-        else:
-            pass
 
     async def chat_async(self, prompt: str) -> str:
         # Ensure agent/tools are ready and process the prompt.
         await self._setup_agent()
-
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
-
-        logging.debug(f"Response type: {type(response)}")
-        logging.debug(f"Response: {response}")
-
-        await connection_manager.broadcast_message_finished()
+        await self.connection_manager.broadcast_message_finished()
 
         response_content = str(response.content)
         self._thread = response.thread

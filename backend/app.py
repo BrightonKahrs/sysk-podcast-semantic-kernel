@@ -18,12 +18,18 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import ClientSecretCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 
-from backend.utils.connection_manager import connection_manager
-from backend.utils.state_store import get_state_store, CosmosDBStateStore
+from backend.utils.connection_manager import (
+    get_connection_manager,
+    ConnectionManager,
+)
+from backend.utils.state_store import get_state_store, StateStore
 from backend.agents.rag_agent import RagAgent
 
-StateStoreType = Union[CosmosDBStateStore, Dict[str, Any]]
-state_store_dependency = Annotated[StateStoreType, Depends(get_state_store)]
+state_store_dependency = Annotated[StateStore, Depends(get_state_store)]
+
+connection_manager_dependency = Annotated[
+    ConnectionManager, Depends(get_connection_manager)
+]
 
 # Set up logging
 logging.basicConfig(
@@ -107,7 +113,9 @@ class ConversationHistoryIds(BaseModel):
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket, connection_manager: connection_manager_dependency
+):
     await websocket.accept()
     connection_manager.add(websocket)
     try:

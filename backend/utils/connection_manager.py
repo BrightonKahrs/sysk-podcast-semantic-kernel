@@ -1,10 +1,18 @@
 import json
-from typing import Set
+from typing import Set, Protocol, runtime_checkable
 
 from fastapi import WebSocket
 
 
-class ConnectionManager:
+@runtime_checkable
+class ConnectionManager(Protocol):
+    def add(self, websocket: WebSocket) -> None: ...
+    def remove(self, websocket: WebSocket) -> None: ...
+    async def broadcast_tool_call(self, tool_name: str) -> None: ...
+    async def broadcast_message_finished(self) -> None: ...
+
+
+class WebSocketConnectionManager:
     def __init__(self):
         self.active_connections: Set[WebSocket] = set()
 
@@ -32,13 +40,9 @@ class ConnectionManager:
         await self._send_message(payload)
 
 
-# Singleton instance
-connection_manager = ConnectionManager()
-
-
 def get_connection_manager() -> ConnectionManager:
     """
     Returns the connection manager for sending messages to users in real time
     """
 
-    return ConnectionManager()
+    return WebSocketConnectionManager()

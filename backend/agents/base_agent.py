@@ -24,7 +24,11 @@ class BaseAgent:
     """
 
     def __init__(
-        self, state_store: Dict[str, Any], user_id: str, session_id: str
+        self,
+        state_store: Dict[str, Any],
+        connection_manager: Any,
+        user_id: str,
+        session_id: str,
     ) -> None:
         self.azure_deployment = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
         self.azure_openai_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -34,6 +38,7 @@ class BaseAgent:
         self.session_id = session_id
         self.user_id = user_id
         self.state_store = state_store
+        self.connection_manager = connection_manager
 
         self.chat_history: List[Dict[str, str]] = self.state_store.get(
             user_id, f"{session_id}_chat_history", []

@@ -2,12 +2,20 @@ from __future__ import annotations
 
 import os
 import logging
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Protocol
 
 from azure.cosmos import CosmosClient, PartitionKey, exceptions as cosmos_exceptions
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 
 from backend.agents.title_summarizer_agent import TitleSummarizerAgent
+
+
+class StateStore(Protocol):
+    def get(self, user_id: str, session_id: str, default: Any = None) -> Any: ...
+    async def set(self, user_id: str, session_id: str, value: Any) -> None: ...
+    def delete_session(self, user_id: str, session_id: str) -> None: ...
+    def list_session_ids(self, user_id: str) -> Iterator[str]: ...
+    def count_session_ids(self, user_id: str) -> int: ...
 
 
 class CosmosDBStateStore:
@@ -165,7 +173,28 @@ class CosmosDBStateStore:
         return res[0] if res else 0
 
 
-def get_state_store() -> Dict[str, Any] | CosmosDBStateStore:
+class InMemoryStateStore:
+    def __init__(self) -> None:
+        self.store: Dict[str, Dict[str, Any]] = {}
+
+    def get(self, user_id: str, session_id: str, default: Any = None) -> Any:
+        return self.store.get(user_id, {}).get(session_id, default)
+
+    async def set(self, user_id: str, session_id: str, value: Any) -> None:
+        self.store.setdefault(user_id, {})[session_id] = value
+
+    def delete_session(self, user_id: str, session_id: str) -> None:
+        if user_id in self.store and session_id in self.store[user_id]:
+            del self.store[user_id][session_id]
+
+    def list_session_ids(self, user_id: str) -> Iterator[str]:
+        return iter(self.store.get(user_id, {}).keys())
+
+    def count_session_ids(self, user_id: str) -> int:
+        return len(self.store.get(user_id, {}))
+
+
+def get_state_store() -> StateStore:
     """
     Return a CosmosDBStateStore if Cosmos configuration exists, else a dict.
     """
@@ -180,5 +209,5 @@ def get_state_store() -> Dict[str, Any] | CosmosDBStateStore:
         logging.info("Using Cosmos DB state store (tenant_id + id partition)")
         return CosmosDBStateStore()
 
-    logging.info("Cosmos DB config absent → using in-memory dict")
-    return {}  # fallback
+    logging.info("Cosmos DB config absent → using in-memory fallback")
+    return InMemoryStateStore()

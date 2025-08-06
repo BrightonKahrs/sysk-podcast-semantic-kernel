@@ -7,17 +7,18 @@ import struct
 from itertools import chain, repeat
 from semantic_kernel.functions import kernel_function
 
-from backend.utils.connection_manager import connection_manager
+from backend.utils.connection_manager import ConnectionManager
 
 
 class AnalyticsPlugin:
     """Queries the Microsoft Fabric analytics ecosystem for podcast episodes"""
 
-    def __init__(self):
+    def __init__(self, connection_manager: ConnectionManager):
+        self.connection_manager = connection_manager
+
         tenant_id = os.getenv("TENANT_ID")
         client_id = os.getenv("CLIENT_ID")
         client_secret = os.getenv("CLIENT_SECRET")
-
         server = os.getenv("FABRIC_SQL_ENDPOINT")
         database = os.getenv("FABRIC_SQL_DATABASE")
 
@@ -50,7 +51,9 @@ class AnalyticsPlugin:
         self,
     ) -> Annotated[str, "Returns the latest podcast episode."]:
 
-        await connection_manager.broadcast_tool_call("Fabric SQL Tool - Latest Episode")
+        await self.connection_manager.broadcast_tool_call(
+            "Fabric SQL Tool - Latest Episode"
+        )
 
         connection = pyodbc.connect(
             self.connection_string, attrs_before=self.attrs_before
@@ -88,7 +91,9 @@ class AnalyticsPlugin:
         self, sql_query: Annotated[str, "MUST be a tsql query string ONLY"]
     ) -> Annotated[str, "Returns query results from podcast table"]:
 
-        await connection_manager.broadcast_tool_call("Fabric SQL Tool - General Query")
+        await self.connection_manager.broadcast_tool_call(
+            "Fabric SQL Tool - General Query"
+        )
 
         try:
             connection = pyodbc.connect(
