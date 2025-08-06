@@ -6,7 +6,7 @@ from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 
-from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
+from backend.plugins.azure_ai_search_plugin import AzureAISearchPlugin
 from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import ConnectionManager
@@ -44,7 +44,10 @@ class RagAgent(BaseAgent):
             Where it makes sense, use a combination of the plugins to come to the right answer
             """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[azure_ai_search_plugin, AnalyticsPlugin(self.connection_manager)],
+            plugins=[
+                AzureAISearchPlugin(self.connection_manager),
+                AnalyticsPlugin(self.connection_manager),
+            ],
         )
 
         # Create a thread to hold the conversation.
