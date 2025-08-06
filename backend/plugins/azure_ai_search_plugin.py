@@ -1,8 +1,8 @@
 from semantic_kernel.functions import KernelParameterMetadata, KernelPlugin
 
 from backend.data_collections.podcast_collection import podcast_collection
-                                     
-                                     
+
+
 azure_ai_search_plugin = KernelPlugin(
     name="azure_ai_search",
     description="Searches against Azure AI Search to learn about podcast episode information",
@@ -27,7 +27,7 @@ azure_ai_search_plugin = KernelPlugin(
                     type_object=int,
                 ),
             ],
-            string_mapper=lambda x: f'Podcast episode title: {x.record.title}, Description: {x.record.description}, Publish Date: {x.record.publish_date}, Transcript: {x.record.transcript}'
+            string_mapper=lambda x: f"Podcast episode title: {x.record.title}, Description: {x.record.description}, Publish Date: {x.record.publish_date}, Transcript: {x.record.transcript}",
         )
-    ]
+    ],
 )

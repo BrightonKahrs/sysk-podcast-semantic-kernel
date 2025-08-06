@@ -12,12 +12,14 @@ from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager
 
+
 class RagAgent(BaseAgent):
-    def __init__(self, state_store: Dict[str, Any], user_id: str, session_id: str) -> None:
+    def __init__(
+        self, state_store: Dict[str, Any], user_id: str, session_id: str
+    ) -> None:
         super().__init__(state_store, user_id, session_id)
         self._agent = None
         self._initialized = False
-
 
     async def _setup_agent(self) -> None:
         """Initialize the assistant and tools only once."""
@@ -28,7 +30,7 @@ class RagAgent(BaseAgent):
         self._agent = ChatCompletionAgent(
             name="PodcastAgent",
             description="An agent that can answer questions about the Stuff You Should Know podcast episodes.",
-            service = AzureChatCompletion(),
+            service=AzureChatCompletion(),
             instructions="""
             You are a helpful assistant that can answer questions about the Stuff You Should Know podcast episodes. 
             Use the AnalyticsPlugin to run sql statements to answer analytics style questions of the podcast episodes - for example this would be a good tool to use if a user asks "how many podcast episodes aired in 2023?"
@@ -42,7 +44,6 @@ class RagAgent(BaseAgent):
             plugins=[azure_ai_search_plugin, AnalyticsPlugin()],
         )
 
-
         # Create a thread to hold the conversation.
         self._thread: ChatHistoryAgentThread | None = None
         # Re‑create the thread from persisted state (if any)
@@ -50,7 +51,7 @@ class RagAgent(BaseAgent):
         if self.state:
             self.state = json.loads(self.state)
 
-        if self.state and isinstance(self.state, dict) and 'thread' in self.state:
+        if self.state and isinstance(self.state, dict) and "thread" in self.state:
             try:
                 self._thread = self.create_thread_from_state(self.state)
             except Exception as e:
@@ -58,18 +59,17 @@ class RagAgent(BaseAgent):
         else:
             pass
 
-
     async def chat_async(self, prompt: str) -> str:
         # Ensure agent/tools are ready and process the prompt.
         await self._setup_agent()
 
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
-        
+
         logging.debug(f"Response type: {type(response)}")
         logging.debug(f"Response: {response}")
 
         await connection_manager.broadcast_message_finished()
-        
+
         response_content = str(response.content)
         self._thread = response.thread
 

@@ -4,11 +4,10 @@ from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 
 
-class TitleSummarizerAgent():
+class TitleSummarizerAgent:
     def __init__(self) -> None:
         self._agent = None
         self._initialized = False
-
 
     async def _setup_agent(self) -> None:
         """Initialize the assistant and tools only once."""
@@ -19,7 +18,7 @@ class TitleSummarizerAgent():
         self._agent = ChatCompletionAgent(
             name="SummarizerAgent",
             description="An agent that is purpose built to summarize content into a title",
-            service = AzureChatCompletion(),
+            service=AzureChatCompletion(),
             instructions="""
                 You are a helpful assistant that summarizes content into a meaningful title
                 Limit the number of filler words
@@ -28,14 +27,13 @@ class TitleSummarizerAgent():
                 You MUST make the title no more than 5 words
                 """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[]
+            plugins=[],
         )
-
 
     async def summarize_content(self, messages: dict) -> str:
         await self._setup_agent()
         messages = str(messages)
         response = await self._agent.get_response(messages=messages)
         response_content = str(response.content)
-        
+
         return response_content
