@@ -1,3 +1,8 @@
+function scrollToBottom() {
+    const chatHistory = document.getElementById('chat-history');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chat-form');
     const input = document.getElementById('prompt-input');
@@ -40,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatHistory.insertBefore(assistantMsg, document.getElementById('loading-spinner-container'));
             chatHistory.scrollTop = chatHistory.scrollHeight;
+            scrollToBottom()
 
             const messageCount = document.querySelectorAll('.message').length;
             console.log(`Message count: ${messageCount}`);

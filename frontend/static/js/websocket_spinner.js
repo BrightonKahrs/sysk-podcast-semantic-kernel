@@ -1,5 +1,10 @@
 // static/js/websocket.js
 
+function scrollToBottom() {
+    const chatHistory = document.getElementById('chat-history');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
 async function getBackendUrl() {
     try {
         const res = await fetch('/config');
@@ -72,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         container.appendChild(entry);
+        scrollToBottom();
     }
 
 
