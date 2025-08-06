@@ -33,21 +33,8 @@ connection_manager_dependency = Annotated[
 
 # Set up logging
 logging.basicConfig(
-    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
-# Suppress uvicorn logs
-logging.getLogger("uvicorn.access").setLevel(logging.CRITICAL)
-logging.getLogger("uvicorn").setLevel(logging.ERROR)
-
-# Suppress Azure SDK logs
-logging.getLogger("azure.core.pipeline").setLevel(logging.CRITICAL)
-
-# Suppress Application Insights telemetry logs
-logging.getLogger("opencensus").setLevel(logging.CRITICAL)
-logging.getLogger("opencensus.trace").setLevel(logging.CRITICAL)
-logging.getLogger("opencensus.ext.azure.common.transport").setLevel(logging.CRITICAL)
-logging.getLogger("opencensus.ext.azure.common").setLevel(logging.CRITICAL)
 
 # Setup from environment
 load_dotenv()  # read .env if present
@@ -126,9 +113,14 @@ async def websocket_endpoint(
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest, request: Request, state_store: state_store_dependency):
+async def chat(
+    req: ChatRequest,
+    request: Request,
+    state_store: state_store_dependency,
+    connection_manager: connection_manager_dependency,
+):
     user_id = request.headers.get("X-User-ID")
-    agent = RagAgent(state_store, user_id, req.session_id)
+    agent = RagAgent(state_store, connection_manager, user_id, req.session_id)
     answer = await agent.chat_async(req.prompt)
     return ChatResponse(response=answer)
 

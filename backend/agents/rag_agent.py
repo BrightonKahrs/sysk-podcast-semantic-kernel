@@ -44,7 +44,7 @@ class RagAgent(BaseAgent):
             Where it makes sense, use a combination of the plugins to come to the right answer
             """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
-            plugins=[azure_ai_search_plugin, AnalyticsPlugin()],
+            plugins=[azure_ai_search_plugin, AnalyticsPlugin(self.connection_manager)],
         )
 
         # Create a thread to hold the conversation.
