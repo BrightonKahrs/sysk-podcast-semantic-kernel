@@ -1,7 +1,6 @@
 from typing import Annotated
 import os
 from dotenv import load_dotenv
-import logging
 
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.connectors.ai.open_ai import AzureTextEmbedding
@@ -37,9 +36,9 @@ class AzureAISearchPlugin:
         top: Annotated[int, "Number of results to return"],
     ) -> str:
 
-        await self.connection_manager.broadcast_tool_call("Azure AI Search Tool")
-
-        logging.info(f"Trying query with params {query} and {top}")
+        await self.connection_manager.broadcast_tool_call(
+            "Looking up transcripts from Azure AI Search"
+        )
 
         try:
             vector = await EMBEDDING_GENERATOR.generate_embeddings([query])
@@ -70,4 +69,4 @@ class AzureAISearchPlugin:
             return results_formatted
 
         except Exception as ex:
-            logging.info(f"Vector search failed: {ex}")
+            print(f"Vector search failed: {ex}")

@@ -38,8 +38,8 @@ class WebSocketConnectionManager:
                 self.remove(conn)
                 logging.info(f"Message failed")
 
-    async def broadcast_tool_call(self, tool_name: str):
-        payload = {"event": "tool_call", "tool_name": tool_name}
+    async def broadcast_tool_call(self, tool_description: str):
+        payload = {"event": "tool_call", "tool_description": tool_description}
         await self._send_message(payload)
 
     async def broadcast_message_finished(self):

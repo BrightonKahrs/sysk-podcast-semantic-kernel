@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Received WebSocket message:', data);
 
         if (data.event === 'tool_call') {
-            const { tool_name } = data;
-            showSpinner(tool_name);
+            const { tool_description } = data;
+            showSpinner(tool_description);
         }
         else if (data.event =='message_finished'){
             hideSpinner()
@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     socket.onclose = () => console.log('WebSocket connection closed.');
     socket.onerror = (error) => console.error('WebSocket error:', error);
 
-    function showSpinner(toolName) {
+    function showSpinner(tool_description) {
         const spinner = document.getElementById('loading-spinner');
         const label = spinner?.querySelector('.spinner-label');
         if (spinner) {
             spinner.style.display = 'flex'; // so the spinner + label are side-by-side
             if (label) {
-                label.textContent = `Running tool: ${toolName}`;
+                label.textContent = tool_description;
             }
         }
     }
