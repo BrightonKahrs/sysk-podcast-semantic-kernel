@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userMsg = document.createElement('div');
         userMsg.className = 'message user';
         userMsg.innerHTML = `<strong>User:</strong> ${prompt}`;
-        chatHistory.insertBefore(userMsg, document.getElementById('loading-spinner'));
+        chatHistory.insertBefore(userMsg, document.getElementById('loading-spinner-container'));
         input.value = '';
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hljs.highlightElement(block);
             });
 
-            chatHistory.insertBefore(assistantMsg, document.getElementById('loading-spinner'));
+            chatHistory.insertBefore(assistantMsg, document.getElementById('loading-spinner-container'));
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             const messageCount = document.querySelectorAll('.message').length;

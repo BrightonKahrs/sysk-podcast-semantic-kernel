@@ -54,10 +54,8 @@
                     <strong>{{ msg.role }}:</strong> {{ msg.content }}
                 </div>
             {% endfor %}
-            <div id="loading-spinner" style="display: none;">
-                <div class="spinner-animation"></div>
-                <div class="spinner-label"></div>
-            </div>
+
+            <div id="loading-spinner-container" style="display: none; flex-direction: column; gap: 10px; margin: 10px 0 10px 8px;"></div>
         </div>
 
         <form id="chat-form">

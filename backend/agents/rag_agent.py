@@ -65,9 +65,10 @@ class RagAgent(BaseAgent):
 
     async def chat_async(self, prompt: str) -> str:
         # Ensure agent/tools are ready and process the prompt.
+        await self.connection_manager.broadcast_tool_call("Determining what to do")
+
         await self._setup_agent()
         response = await self._agent.get_response(messages=prompt, thread=self._thread)
-        await self.connection_manager.broadcast_message_finished()
 
         response_content = str(response.content)
         self._thread = response.thread
@@ -80,5 +81,7 @@ class RagAgent(BaseAgent):
             {"role": "assistant", "content": response_content},
         ]
         await self.append_to_chat_history(messages)
+
+        await self.connection_manager.broadcast_message_finished()
 
         return response_content
