@@ -1,19 +1,11 @@
-# routes/chat.py
 import requests
 import uuid
-import logging
 
 from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, current_app
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
 chat_bp = Blueprint('chat', __name__)
 
-### Helper Functions ###
+
 def load_user_history_into_session():
     BASE_BACKEND_URL = current_app.config.get('BACKEND_URL')
     user_id = session.get('user', {}).get('user_id')
@@ -32,8 +24,6 @@ def load_user_history_into_session():
 
     return session_ids
 
-
-### Blueprint functions ###
 @chat_bp.before_request
 def require_login():
     user = session.get('user')
@@ -63,7 +53,6 @@ def chat():
 
     data = request.get_json()
     prompt = data.get('prompt')
-    # prompt = request.form.get('prompt')
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
@@ -96,8 +85,6 @@ def chat():
     session.modified = True
 
     return jsonify({'response': response_text})
-    # return redirect(url_for('chat.index'))
-
 
 @chat_bp.route('/reset', methods=['GET', 'POST'])
 def reset():

@@ -10,9 +10,8 @@ from semantic_kernel.agents import ChatHistoryAgentThread
 from semantic_kernel.contents.chat_history import ChatHistory
 
 from backend.utils.json_encoder import CustomEncoder
-from backend.utils.state_store import CosmosDBStateStore
   
-load_dotenv()  # Load environment variables from .env file if needed 
+load_dotenv()
 
   
 class BaseAgent:  

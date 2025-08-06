@@ -3,7 +3,6 @@ import os
 from flask import Blueprint, session, url_for, redirect, jsonify, current_app
 
 config_bp = Blueprint('config', __name__)
-
 environment = os.getenv('ENVIRONMENT')
 
 @config_bp.before_request

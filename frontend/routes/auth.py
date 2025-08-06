@@ -1,11 +1,12 @@
 import os
 import uuid
+
 from flask import Blueprint, redirect, session, request, url_for, render_template
 from msal import ConfidentialClientApplication
 
 auth_bp = Blueprint('auth', __name__)
-
 allowed_group_ids = ['11670d85-e950-4fa8-9fc9-fd6a00de6af0']
+
 
 def _build_msal_app():
     return ConfidentialClientApplication(
@@ -14,11 +15,9 @@ def _build_msal_app():
         client_credential=os.getenv('CLIENT_SECRET')
     )
 
-
 @auth_bp.route('/auth/start')
 def auth_start():
     return render_template('login.html')
-
 
 @auth_bp.route('/login')
 def login():

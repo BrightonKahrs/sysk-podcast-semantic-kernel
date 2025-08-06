@@ -1,4 +1,3 @@
-#frontend/main.py
 from dotenv import load_dotenv
 import os
 
@@ -10,9 +9,8 @@ from frontend.routes.chat import chat_bp
 from frontend.routes.config import config_bp
 from frontend.routes.auth import auth_bp
 
-
-
 load_dotenv()
+
 
 def create_app():
     app = Flask(__name__)
@@ -27,7 +25,6 @@ def create_app():
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Register blueprints
-
     app.register_blueprint(chat_bp)
     app.register_blueprint(config_bp)
     app.register_blueprint(auth_bp)

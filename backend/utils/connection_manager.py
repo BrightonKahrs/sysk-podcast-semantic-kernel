@@ -1,9 +1,8 @@
-# connection_manager.py
 import json
-from typing import Set, Optional
-from enum import Enum
+from typing import Set
 
 from fastapi import WebSocket
+
 
 class ConnectionManager:
     def __init__(self):
@@ -37,6 +36,6 @@ class ConnectionManager:
         }
         await self._send_message(payload)
 
-# singleton instance
+# Singleton instance
 connection_manager = ConnectionManager()
 

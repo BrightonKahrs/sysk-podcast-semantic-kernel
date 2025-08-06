@@ -1,22 +1,14 @@
 from __future__ import annotations  
-  
 import os  
 import logging 
 from typing import Any, Dict, Iterator, List, Optional  
   
-# ---------------------------------------------------------------------------  
-# 3rd-party SDKs  
-# ---------------------------------------------------------------------------  
-  
 from azure.cosmos import CosmosClient, PartitionKey, exceptions as cosmos_exceptions
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 from backend.agents.title_summarizer_agent import TitleSummarizerAgent
-  
-# ---------------------------------------------------------------------------  
-# Cosmos-backed implementation  
-# ---------------------------------------------------------------------------  
+
+
 class CosmosDBStateStore():  
     """  
     Dict-like wrapper around a Cosmos DB container whose hierarchical  
@@ -34,9 +26,7 @@ class CosmosDBStateStore():
         if not endpoint:  
             raise RuntimeError("COSMOSDB_ENDPOINT must be defined")  
   
-        # Data-level tenant (NOT the AAD tenant used for auth)  
         self.tenant_id: str = os.getenv("DATA_AZURE_TENANT_ID", "default")
-        # self.user_id = "1111-1111-1111-1111"
   
         self.client = CosmosClient(endpoint, credential=self._create_credential())  
   
@@ -59,8 +49,8 @@ class CosmosDBStateStore():
             id=container_name,  
             partition_key=pk,  
         )  
-  
-    # ------------------------- authentication helpers -------------------------  
+
+
     def _create_credential(self):  
         key = os.getenv("COSMOSDB_KEY")
         if key:  
@@ -86,11 +76,8 @@ class CosmosDBStateStore():
             )  
         logging.info("CosmosDBStateStore: authenticating with DefaultAzureCredential")  
         return DefaultAzureCredential(exclude_interactive_browser_credential=True)
-    
-    # def _update_user_id(self, user_id: str):  
-    #     self.user_id = user_id
-  
-    # ------------------------- internal helpers -------------------------  
+     
+
     def _read(self, user_id: str, session_id: str) -> Optional[Dict[str, Any]]:  
         try:  
             return self.container.read_item(  
@@ -100,7 +87,7 @@ class CosmosDBStateStore():
         except cosmos_exceptions.CosmosResourceNotFoundError:  
             return None  
   
-    # ------------------------- MutableMapping API -------------------------  
+
     def get(self, user_id: str, session_id: str, default: Any = None) -> Any:  
         doc = self._read(user_id, session_id)  
         return default if doc is None else doc["value"]  

@@ -7,6 +7,7 @@ from semantic_kernel.kernel_types import OptionalOneOrList
 from pydantic import BaseModel
 from azure.search.documents.indexes.models import SearchFieldDataType
 
+
 @vectorstoremodel
 class PodcastEpisode(BaseModel):
     id: Annotated[str, VectorStoreField("key")]

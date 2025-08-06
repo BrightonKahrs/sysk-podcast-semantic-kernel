@@ -1,20 +1,15 @@
-import asyncio
 from typing import Annotated
-import time
 import os
-
 
 import pyodbc
 import msal
 import struct
 from itertools import chain, repeat
-from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.functions import kernel_function
 
 from backend.utils.connection_manager import connection_manager
 
-# Define a sample plugin for the sample
+
 class AnalyticsPlugin:
     """Queries the Microsoft Fabric analytics ecosystem for podcast episodes"""
 
