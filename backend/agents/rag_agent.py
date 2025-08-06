@@ -1,20 +1,13 @@
 # Copyright (c) Microsoft. All rights reserved.
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 import logging
 import json
 
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-from semantic_kernel.agents import AgentThread, ChatCompletionAgent
-from semantic_kernel.connectors.ai import FunctionChoiceBehavior
-from semantic_kernel.kernel_types import OptionalOneOrList
-from azure.search.documents.indexes.models import SearchFieldDataType
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
-from semantic_kernel.contents.chat_history import ChatHistory
-from semantic_kernel.contents.chat_message_content import ChatMessageContent
 
 from backend.plugins.azure_ai_search_plugin import azure_ai_search_plugin
-from backend.plugins.menu_plugin import MenuPlugin
 from backend.plugins.analytics_plugin import AnalyticsPlugin
 from backend.agents.base_agent import BaseAgent
 from backend.utils.connection_manager import connection_manager

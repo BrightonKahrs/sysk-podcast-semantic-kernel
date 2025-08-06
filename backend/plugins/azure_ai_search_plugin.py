@@ -2,6 +2,7 @@ from semantic_kernel.functions import KernelParameterMetadata, KernelPlugin
 
 from backend.data_collections.podcast_collection import podcast_collection
                                      
+                                     
 azure_ai_search_plugin = KernelPlugin(
     name="azure_ai_search",
     description="Searches against Azure AI Search to learn about podcast episode information",
