@@ -34,3 +34,11 @@ class ConnectionManager:
 
 # Singleton instance
 connection_manager = ConnectionManager()
+
+
+def get_connection_manager() -> ConnectionManager:
+    """
+    Returns the connection manager for sending messages to users in real time
+    """
+
+    return ConnectionManager()

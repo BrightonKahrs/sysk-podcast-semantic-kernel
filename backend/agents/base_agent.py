@@ -1,10 +1,8 @@
 import os
-import logging
 from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 import json
 
-from functools import wraps
 from semantic_kernel.contents.chat_message_content import (
     ChatMessageContent,
     FunctionCallContent,
@@ -41,7 +39,6 @@ class BaseAgent:
             user_id, f"{session_id}_chat_history", []
         )
         self.state: Optional[Any] = self.state_store.get(user_id, session_id, None)
-        logging.debug(f"Chat history for session {session_id}: {self.chat_history}")
 
     async def _setstate(self, state: Any) -> None:
         state = json.dumps(

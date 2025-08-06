@@ -1,10 +1,17 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Annotated, Any, Union
 from dotenv import load_dotenv
 import os
 import logging
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    Request,
+    HTTPException,
+    Depends,
+)
 from pydantic import BaseModel
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 from azure.ai.projects import AIProjectClient
@@ -12,8 +19,11 @@ from azure.identity import ClientSecretCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 
 from backend.utils.connection_manager import connection_manager
-from backend.utils.state_store import get_state_store
-from backend.agents.rag_agent import RagAgent  # Import the RagAgent class
+from backend.utils.state_store import get_state_store, CosmosDBStateStore
+from backend.agents.rag_agent import RagAgent
+
+StateStoreType = Union[CosmosDBStateStore, Dict[str, Any]]
+state_store_dependency = Annotated[StateStoreType, Depends(get_state_store)]
 
 # Set up logging
 logging.basicConfig(
@@ -63,7 +73,7 @@ configure_azure_monitor(connection_string=connection_string)
 active_connections: Set[WebSocket] = set()
 
 # Set conversation state history
-STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore
+# STATE_STORE = get_state_store()  # either dict or CosmosDBStateStore
 
 # Setup FastAPI App
 app = FastAPI()
@@ -108,9 +118,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest, request: Request):
+async def chat(req: ChatRequest, request: Request, state_store: state_store_dependency):
     user_id = request.headers.get("X-User-ID")
-    agent = RagAgent(STATE_STORE, user_id, req.session_id)
+    agent = RagAgent(state_store, user_id, req.session_id)
     answer = await agent.chat_async(req.prompt)
     return ChatResponse(response=answer)
 
@@ -123,28 +133,34 @@ async def reset_session(req: SessionResetRequest, request: Request):
 
 
 @app.post("/delete/{session_id}")
-async def delete_session(session_id: str, request: Request):
+async def delete_session(
+    session_id: str, request: Request, state_store: state_store_dependency
+):
     user_id = request.headers.get("X-User-ID")
     if not user_id:
         raise HTTPException(status_code=400, detail="Missing user ID")
 
     hist_key = f"{session_id}_chat_history"
 
-    STATE_STORE.delete_session(user_id, session_id)
-    STATE_STORE.delete_session(user_id, hist_key)
+    state_store.delete_session(user_id, session_id)
+    state_store.delete_session(user_id, hist_key)
 
 
 @app.get("/history/{session_id}", response_model=ConversationHistoryResponse)
-async def get_conversation_history(session_id: str, request: Request):
+async def get_conversation_history(
+    session_id: str, request: Request, state_store: state_store_dependency
+):
     user_id = request.headers.get("X-User-ID")
-    history = STATE_STORE.get(user_id, f"{session_id}_chat_history", [])
+    history = state_store.get(user_id, f"{session_id}_chat_history", [])
     return ConversationHistoryResponse(session_id=session_id, history=history)
 
 
 @app.get("/history", response_model=ConversationHistoryIds)
-async def get_conversation_history(request: Request):
+async def get_conversation_history(
+    request: Request, state_store: state_store_dependency
+):
     user_id = request.headers.get("X-User-ID")
-    session_ids = list(STATE_STORE.list_session_ids(user_id))
+    session_ids = list(state_store.list_session_ids(user_id))
 
     session_ids = [
         ConversationHistoryId(
