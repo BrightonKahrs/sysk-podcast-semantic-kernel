@@ -53,6 +53,7 @@ def index():
         "index.html",
         conversation=session.get("conversation", []),
         history_ids=session.get("history_ids", []),
+        session_id=session.get("session_id"),
     )
 
 

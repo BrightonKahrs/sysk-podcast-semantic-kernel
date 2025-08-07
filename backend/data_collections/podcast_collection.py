@@ -1,5 +1,0 @@
-from semantic_kernel.connectors.azure_ai_search import AzureAISearchCollection
-from backend.data_models.podcast_episode import PodcastEpisode
-
-
-podcast_collection = AzureAISearchCollection(record_type=PodcastEpisode)

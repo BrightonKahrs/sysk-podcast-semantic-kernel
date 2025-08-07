@@ -52,7 +52,7 @@ class AnalyticsPlugin:
     ) -> Annotated[str, "Returns the latest podcast episode."]:
 
         await self.connection_manager.broadcast_tool_call(
-            "Fabric SQL Tool - Latest Episode"
+            "Getting latest episode from Fabric"
         )
 
         connection = pyodbc.connect(
@@ -91,9 +91,7 @@ class AnalyticsPlugin:
         self, sql_query: Annotated[str, "MUST be a tsql query string ONLY"]
     ) -> Annotated[str, "Returns query results from podcast table"]:
 
-        await self.connection_manager.broadcast_tool_call(
-            "Fabric SQL Tool - General Query"
-        )
+        await self.connection_manager.broadcast_tool_call("Running a Fabric SQL Query")
 
         try:
             connection = pyodbc.connect(

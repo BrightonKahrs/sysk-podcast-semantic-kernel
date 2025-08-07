@@ -41,26 +41,26 @@ load_dotenv()  # read .env if present
 
 
 # Set up telemetry - requires an AZ login via Service Principal
-# OpenAIInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
 
-# client_id = os.getenv("CLIENT_ID")
-# client_secret = os.getenv("CLIENT_SECRET")
-# tenant_id = os.getenv("TENANT_ID")
-# endpoint = os.getenv("AZURE_AI_FOUNDRY_ENDPOINT")
+client_id = os.getenv("CLIENT_ID")
+client_secret = os.getenv("CLIENT_SECRET")
+tenant_id = os.getenv("TENANT_ID")
+endpoint = os.getenv("AZURE_AI_FOUNDRY_ENDPOINT")
 
-# credential = ClientSecretCredential(
-#     tenant_id=tenant_id,
-#     client_id=client_id,
-#     client_secret=client_secret,
-# )
+credential = ClientSecretCredential(
+    tenant_id=tenant_id,
+    client_id=client_id,
+    client_secret=client_secret,
+)
 
-# project_client = AIProjectClient(
-#     credential=credential,
-#     endpoint=endpoint,
-# )
+project_client = AIProjectClient(
+    credential=credential,
+    endpoint=endpoint,
+)
 
-# connection_string = project_client.telemetry.get_connection_string()
-# configure_azure_monitor(connection_string=connection_string)
+connection_string = project_client.telemetry.get_connection_string()
+configure_azure_monitor(connection_string=connection_string)
 
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
