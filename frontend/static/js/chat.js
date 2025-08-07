@@ -3,6 +3,25 @@ function scrollToBottom() {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.markdown-content').forEach(el => {
+    const markdownText = el.getAttribute('data-md');
+    if (markdownText) {
+      // Convert markdown text to HTML using marked
+      const fixedMarkdown = markdownText.replace(/\\n/g, '\n');
+
+      el.innerHTML = marked.parse(fixedMarkdown);
+    }
+  });
+
+  // Optional: highlight code blocks (if any) with highlight.js
+  if (window.hljs) {
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }
+});
+
 function highlightCurrentSession() {
     const currentSessionIdEl = document.getElementById('current-session-id');
     if (!currentSessionIdEl) return;

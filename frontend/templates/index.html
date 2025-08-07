@@ -8,6 +8,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
     <div class="sidebar">
@@ -52,7 +55,9 @@
         <div class="chat-history" id="chat-history">
             {% for msg in conversation %}
                 <div class="message {{ msg.role }}">
-                    <strong>{{ msg.role }}:</strong> {{ msg.content }}
+                    <strong>{{ msg.role }}:</strong>
+                    <!-- Put raw markdown text in a data attribute, escape it -->
+                    <div class="markdown-content" data-md="{{ msg.content | e }}"></div>
                 </div>
             {% endfor %}
 

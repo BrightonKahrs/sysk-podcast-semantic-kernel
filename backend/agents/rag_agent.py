@@ -41,7 +41,9 @@ class RagAgent(BaseAgent):
 
             When using the AnalyticsPlugin-query_sql tool. You MUST pass it only a tsql readable query string and nothing else
 
-            Where it makes sense, use a combination of the plugins to come to the right answer
+            Where it makes sense, use a combination of the plugins to come to the right answer.
+            
+            The final response should ALWAYS BE IN MARKDOWN
             """,
             function_choice_behavior=FunctionChoiceBehavior.Auto(),
             plugins=[
