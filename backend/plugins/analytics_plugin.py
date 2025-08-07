@@ -61,12 +61,12 @@ class AnalyticsPlugin:
         cursor = connection.cursor()
         cursor.execute(
             """
-                         SELECT
-                            title,
-                            publish_date
-                        FROM sysk_silver_lh.dbo.episodes
-                        WHERE publish_date = (SELECT MAX(publish_date) FROM sysk_silver_lh.dbo.episodes);
-                    """
+                SELECT
+                    title,
+                    publish_date
+                FROM sysk_silver_lh.dbo.episodes
+                WHERE publish_date = (SELECT MAX(publish_date) FROM sysk_silver_lh.dbo.episodes);
+            """
         )
         rows = cursor.fetchall()
         cursor.close()
