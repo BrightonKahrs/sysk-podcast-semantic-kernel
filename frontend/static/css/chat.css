@@ -105,6 +105,10 @@ body {
     background: rgba(255, 255, 255, .15);
 }
 
+.highlight {
+    background: rgba(255, 255, 255, .15);
+}
+
 .delete-button-form {
     flex-shrink: 0;
     display: flex;

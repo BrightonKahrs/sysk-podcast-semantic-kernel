@@ -21,6 +21,7 @@
         </div>
 
         <div id="chat-history-ids">
+            <div id="current-session-id" style="display: none;">{{ session_id }}</div>
             <h3 id="previous-chats">Previous chats</h3>
 
             <div id="chat-history-list">
@@ -66,6 +67,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/session_highlighter.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/websocket_spinner.js') }}"></script>
     
 </body>
