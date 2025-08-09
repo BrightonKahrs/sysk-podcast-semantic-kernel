@@ -1,16 +1,14 @@
 * {
     box-sizing: border-box;
     margin: 0;
-    padding: 0;
 }
 
 body {
     font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    /*background: linear-gradient(to bottom, #cf3530 85%, #333333 100%); /* red background */
     background-color: #cf3530;
     color: #333333;
     display: flex;
-    height: 100vh; /* full viewport height */
+    height: 100vh;
 }
 
 .sidebar {
@@ -25,36 +23,34 @@ body {
 }
 
 .new-chat {
-    width: 100%; /* fills the sidebar's width */
-    margin-bottom: 1rem; /* optional spacing below */
+    width: 100%;
+    margin-bottom: 1rem;
     color: none; 
 }
 
 .new-chat form {
-    width: 100%; /* make form fill .new-chat div */
+    width: 100%;
 }
 
 .new-chat button {
-    width: 100%;           /* fill the form horizontally */
-    padding: 0.5rem 1rem;  /* keep the padding from your existing buttons */
-    box-sizing: border-box; /* make sure padding included in width */
-    border-radius: 4px;     /* match your existing style */
+    width: 100%;
+    padding: 0.5rem 1rem;
+    box-sizing: border-box;
+    border-radius: 4px;
     cursor: pointer;
 
-    /* Optional: match your existing style */
     color: #333333;
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
 
     display: flex;
-    align-items: center;   /* vertical center */
-    justify-content: center; /* horizontal center */
-    padding: 0.25rem;       /* optional spacing */
-
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
     height: 31px;
 
     display: inline-flex;
-    gap: 0.5rem; /* controls spacing between icon and text */
-    padding: 0.5rem 1rem; /* optional */
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
     border: none;
     font: inherit;
     font-size: 0.8rem;
@@ -81,15 +77,13 @@ body {
     border-radius: 4px;
 }
 
-/* Fix 1: Allow truncation inside flex */
 .get-history-id-form {
     flex: 1;
-    min-width: 0; /* 👈 Crucial for ellipsis to work in flex */
+    min-width: 0;
     margin: 0;
     border-radius: 4px;
 }
 
-/* Fix 2: Make button text truncate correctly */
 .get-history-id-button {
     width: 100%;
     text-align: left;
@@ -110,12 +104,16 @@ body {
     background: rgba(255, 255, 255, .15);
 }
 
+.highlight {
+    background: rgba(255, 255, 255, .15);
+}
+
 .delete-button-form {
     flex-shrink: 0;
     display: flex;
-    align-items: center;   /* vertical center */
-    justify-content: center; /* horizontal center */
-    padding: 0.25rem;       /* optional spacing */
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
     background: none;
     border: none;
     cursor: pointer;
@@ -129,8 +127,8 @@ body {
     background:#333333;
     border:none;
     display: flex;
-    align-items: center;   /* vertical center */
-    justify-content: center; /* horizontal center */
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
 }
 
@@ -143,8 +141,8 @@ body {
 }
 
 .icon:hover {
-    color: red; /* for contrast */
-    border-radius: 4px; /* optional */
+    color: red;
+    border-radius: 4px;
 }
 .main {
     flex: 1;
@@ -169,15 +167,15 @@ body {
 }
 
 .divider {
-    width: 80%;           /* Stretch across container */
-    height: 2px;           /* Thin line */
-    background-color: #000; /* Black bar */
-    margin: 10px auto;        /* Space above and below */
+    width: 80%;
+    height: 2px;
+    background-color: #000;
+    margin: 10px auto;
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
 }
 
 .spacer {
-    height: 30px;       /* Adjust to your liking */
+    height: 30px;
 }
 
 .chat-history {
@@ -204,14 +202,39 @@ body {
     box-shadow: 0 4px 6px rgba(51, 51, 51, 0.5);
 }
 
+.markdown-content {
+    white-space: normal;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    margin-top: 4px;
+    padding-left: 20px;
+}
+
+.markdown-content pre {
+    background-color: #2d2d2d;
+    color: #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.markdown-content code {
+    font-family: monospace;
+    background-color: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
 .spinner-animation {
-    border: 4px solid rgba(255, 255, 255, 0.8);
-    border-top: 4px solid #333333;
-    border-radius: 50%;
     width: 24px;
     height: 24px;
     animation: spin 1s linear infinite;
-    margin: 10px 0 10px 8px; /* Align left like chat bubbles */
+}
+
+.completed-spinner {
+    width: 24px;
+    height: 24px;
+    opacity: .6;
 }
 
 @keyframes spin {
@@ -226,10 +249,26 @@ body {
     margin: 10px 0 10px 8px;
 }
 
+.spinner-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spinner-animation {
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
 .spinner-label {
     font-style: italic;
     color: white;
-    font-weight:bold
+    font-weight:bold;
+}
+
+.spinner-label-completed{
+    opacity: 0.6;
 }
 
 form {

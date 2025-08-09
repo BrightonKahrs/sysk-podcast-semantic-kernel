@@ -1,3 +1,56 @@
+function scrollToBottom() {
+    const chatHistory = document.getElementById('chat-history');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.markdown-content').forEach(el => {
+    const markdownText = el.getAttribute('data-md');
+    if (markdownText) {
+      // Convert markdown text to HTML using marked
+      const fixedMarkdown = markdownText.replace(/\\n/g, '\n');
+
+      el.innerHTML = marked.parse(fixedMarkdown);
+    }
+  });
+
+  // Optional: highlight code blocks (if any) with highlight.js
+  if (window.hljs) {
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }
+});
+
+function highlightCurrentSession() {
+    const currentSessionIdEl = document.getElementById('current-session-id');
+    if (!currentSessionIdEl) return;
+
+    const currentSessionId = currentSessionIdEl.textContent.trim();
+    if (!currentSessionId) return;
+
+    const chatHistoryList = document.getElementById('chat-history-list');
+    if (!chatHistoryList) return;
+
+    // Find all forms with class 'get-history-id-form'
+    const forms = chatHistoryList.querySelectorAll('form.get-history-id-form');
+
+    forms.forEach(form => {
+        const action = form.getAttribute('action') || '';
+
+        if (action.includes(currentSessionId)) {
+            // Highlight the form or its parent container as needed
+            form.classList.add('highlight');
+
+            // Optional: highlight the container div instead
+            // const parentDiv = form.closest('.chat-history-id');
+            // if (parentDiv) parentDiv.classList.add('highlight');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', highlightCurrentSession);
+
 document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chat-form');
     const input = document.getElementById('prompt-input');
@@ -12,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userMsg = document.createElement('div');
         userMsg.className = 'message user';
         userMsg.innerHTML = `<strong>User:</strong> ${prompt}`;
-        chatHistory.insertBefore(userMsg, document.getElementById('loading-spinner'));
+        chatHistory.insertBefore(userMsg, document.getElementById('loading-spinner-container'));
         input.value = '';
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
@@ -38,8 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 hljs.highlightElement(block);
             });
 
-            chatHistory.insertBefore(assistantMsg, document.getElementById('loading-spinner'));
+            chatHistory.insertBefore(assistantMsg, document.getElementById('loading-spinner-container'));
             chatHistory.scrollTop = chatHistory.scrollHeight;
+            scrollToBottom()
 
             const messageCount = document.querySelectorAll('.message').length;
             console.log(`Message count: ${messageCount}`);
@@ -75,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     container.appendChild(historyDiv);
                 });
+
+                highlightCurrentSession()
             }
 
         } catch (err) {

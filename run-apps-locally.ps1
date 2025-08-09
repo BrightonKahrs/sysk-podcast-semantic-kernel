@@ -14,8 +14,8 @@ docker build -t $frontendName -f Dockerfile.frontend .
 $networkExists = docker network ls --format '{{.Name}}' | Select-String -Pattern $networkName
 
 if (-not $networkExists) {
-    Write-Host "Creating Docker network $networkName..."
-    docker network create $networkName
+  Write-Host "Creating Docker network $networkName..."
+  docker network create $networkName
 }
 
 # Remove old containers (if exist)
